@@ -26,6 +26,14 @@ Our simplest Magento 2 module uses WebPack for React Components Compilation and 
 
 You can develop React components even without Magento installation at all. You can just copy your component inside Magento Module and add some fixes into sources to work with Require JS and use React Component as a Magento UI component.
 
+# CSS improvements
+
+You can also replace Magento CSS with your custom CSS files if you put them compiled into pub/static
+```
+$optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
+```
+
+
 # VueJS support 
 
 ![Logo-Vuejs](https://user-images.githubusercontent.com/9213670/150036919-3486e016-3d37-4ffd-b4ee-a3a3bbc961e9.png)
