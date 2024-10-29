@@ -14,6 +14,9 @@
 			<junk>
 				<remove>1</remove>
 			</junk>
+			<css>
+				<remove>0</remove>
+			</css>
 		</react_vue_config>
 	</default>
 </config>
