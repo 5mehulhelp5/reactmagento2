@@ -11,7 +11,7 @@ React Magento 2 implementation. This Simple module explains how to add and use R
 - VueJS implementation 
 - Magento Configuration enable React, VueJS
 - Remove Magento's default JS Junk (Require, Knockout, jQuery) configuration. You will need to implement the required functionality or use Magento Open Source ReactJS Luma Theme
-- CSS optimizer feater added 
+- CSS optimizer feater added. Add optimised CSS files to pub/static/styles-(l|m).css and replace the default Magento one 
 - Magento ReactJS Luma theme released
 
 # Magento Blazing-Fast React Luma Theme Implementation:
