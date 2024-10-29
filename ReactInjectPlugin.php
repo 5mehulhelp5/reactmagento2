@@ -2,18 +2,18 @@
 
 namespace React\React;
 
-use Magento\Framework\View\Page\Config\Renderer;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Asset\GroupedCollection;
 use Magento\Framework\View\Page\Config;
 use Magento\Framework\View\Page\Config\Metadata\MsApplicationTileImage;
+use Magento\Framework\View\Page\Config\Renderer;
 
 /**
  * Page config Renderer model Plugin
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ReactInjectPlugin extends Renderer 
+class ReactInjectPlugin extends Renderer
 {
     /**
      * @param Config $pageConfig
@@ -51,21 +51,22 @@ class ReactInjectPlugin extends Renderer
         $vueEnabled = boolval($config->getValue('react_vue_config/vue/enable'));
         /* remove default magento Junky JS */
         $removeAdobeJSJunk = boolval($config->getValue('react_vue_config/junk/remove'));
+        $removeCSSjunk = boolval($config->getValue('react_vue_config/css/remove'));
         $state = $objectManager->get('Magento\Framework\App\State');
         $store = $objectManager->get(\Magento\Store\Model\StoreManagerInterface::class);
         $area = $state->getAreaCode();
         $pageFilter = ['checkout', 'customer'];
-        $actionFilter = ['catalog_category_view', 
-                         'cms_index_index', 
-                         'cms_page_view', 
-                         'catalog_product_view', 
-                         'catalogsearch_result_index'];
+        $actionFilter = ['catalog_category_view',
+            'cms_index_index',
+            'cms_page_view',
+            'catalog_product_view',
+            'catalogsearch_result_index'];
 
         $request = $objectManager->get(\Magento\Framework\App\Request\Http::class);
         $actionName = $request->getFullActionName();
         @header("Action-Name: $actionName");
         $requestURL = $_SERVER['REQUEST_URI'];
-        $removeProtection = boolval(boolval(strpos($requestURL,'checkout')) || boolval(strpos($requestURL,'customer')) || $area === 'adminhtml');
+        $removeProtection = boolval(boolval(strpos($requestURL, 'checkout')) || boolval(strpos($requestURL, 'customer')) || $area === 'adminhtml');
         @header("React-Protection: $removeProtection");
         $block = $objectManager->get(\Magento\Framework\View\Element\Template::class);
         $assets = $this->processMerge($group->getAll(), $group);
@@ -73,18 +74,19 @@ class ReactInjectPlugin extends Renderer
 
         $result = '';
         $template = '';
-       $assetOptimized = false ;
+        $assetOptimized = false;
+        $assetOptimized2 = false;
 
         try {
             /** @var $asset \Magento\Framework\View\Asset\AssetInterface */
             //Changes Start
-          $baseURL = $store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
-          foreach ($assets as $key => $asset) {
-                 if (in_array($actionName, $actionFilter) && strpos($asset->getUrl(),'styles-m.css')) {
+            $baseURL = $store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
+            foreach ($assets as $key => $asset) {
+                if (in_array($actionName, $actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
                     // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-m.css
                     $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
                     $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
-                    if(file_exists($optimisedCSSFilePath)) {
+                    if (file_exists($optimisedCSSFilePath)) {
                         //echo $optimisedCSSFileUrl;
                         $assetOptimized = $optimisedCSSFileUrl;
                         unset($assets[$key]);
@@ -92,45 +94,69 @@ class ReactInjectPlugin extends Renderer
                         @header("Optimised-CSS: false");
                     }
                 }
-          }
+                if (in_array($actionName, $actionFilter) && strpos($asset->getUrl(), 'styles-l')) {
+                    // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-l.css
+                    $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.css';
+                    $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
+                    if (file_exists($optimisedCSSFilePathLarge)) {
+                        //echo $optimisedCSSFileUrl;
+                        $assetOptimized2 = $optimisedCSSFileUrlLarge;
+                        unset($assets[$key]);
+                    } else {
+                        @header("Optimised-CSS: false");
+                    }
+                }
+            }
 
-          foreach ($assets as $key  => $asset) {
-                if (strpos($asset->getUrl(),'js/react')) {
+            foreach ($assets as $key => $asset) {
+                if (strpos($asset->getUrl(), 'js/react')) {
                     unset($assets[$key]);
-                    if ($reactEnabled)
-                    array_unshift($assets, $asset);
-                } else if (strpos($asset->getUrl(),'vue')) {
+                    if ($reactEnabled) {
+                        array_unshift($assets, $asset);
+                    }
+
+                } else if (strpos($asset->getUrl(), 'vue')) {
                     unset($assets[$key]);
-                    if ($vueEnabled)
-                    array_unshift($assets, $asset);
-                } else if (strpos($asset->getUrl(),'require')) {
-                    unset($assets[$key]);
+                    if ($vueEnabled) {
+                        array_unshift($assets, $asset);
+                    }
+
+                } else if (strpos($asset->getUrl(), 'require')) {
+                    if ($removeAdobeJSJunk)
+                    //dd($removeAdobeJSJunk);
+                    {
+                        unset($assets[$key]);
+                    }
+
                     // junk True ; protection False
-                        //echo "require " . (string) $removeProtection;
-                    //var_dump($removeAdobeJSJunk); die();
-                    if (!$removeAdobeJSJunk || !in_array($actionName, $actionFilter))
+                    // echo "require " . (string) $removeProtection;
+                    if (!$removeAdobeJSJunk || !in_array($actionName, $actionFilter));
+                    array_unshift($assets, $asset);
+                } else if (strpos($asset->getUrl(), 'styles-')) {
+                    unset($assets[$key]);
+                    if (!$removeCSSjunk || !in_array($actionName, $actionFilter)) {
+                        array_unshift($assets, $asset);
+                    }
+
+                }
+            }
+            //we need execute it one more time to make scripts the same order
+            foreach ($assets as $key => $asset) {
+                if (strpos($asset->getUrl(), 'require')) {
+                    unset($assets[$key]);
                     array_unshift($assets, $asset);
                 }
             }
-            //we need execute it one more time to make scripts the same order 
-           foreach ($assets as $key  => $asset) {
-                if (strpos($asset->getUrl(),'require')){
-                unset($assets[$key]);
-                array_unshift($assets, $asset);
+
+            foreach ($assets as $key => $asset) {
+                if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
+                    unset($assets[$key]);
+                    array_unshift($assets, $asset);
                 }
             }
-
-            foreach ($assets as $key  => $asset) {
-//              var_dump($asset->getUrl());
-                if (strpos($asset->getUrl(),'js/react') || strpos($asset->getUrl(),'vue')){
-                unset($assets[$key]);
-                array_unshift($assets, $asset);
-                }
-            }
-
 
             //Changes Ends
-            
+
             foreach ($assets as $asset) {
                 $template = $this->getAssetTemplate(
                     $group->getProperty(GroupedCollection::PROPERTY_CONTENT_TYPE),
@@ -142,8 +168,11 @@ class ReactInjectPlugin extends Renderer
             $this->logger->critical($e);
             $result .= sprintf($template, $this->urlBuilder->getUrl('', ['_direct' => 'core/index/notFound']));
         }
-        if($assetOptimized !== false) {
-                $result = '<link  rel="stylesheet" type="text/css"  media="all" href="'.$assetOptimized.'" />' . "\n" . $result;
+        if ($assetOptimized !== false) {
+            $result = '<link  rel="stylesheet" type="text/css"  media="all" href="' . $assetOptimized . '" />' . "\n" . $result;
+        }
+        if ($assetOptimized2 !== false) {
+            $result = '<link  rel="stylesheet" type="text/css"  media="screen and (min-width: 768px)" href="' . $assetOptimized2 . '" />' . "\n" . $result;
         }
         return $result;
     }
