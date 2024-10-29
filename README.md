@@ -1,17 +1,17 @@
-# Do you have questions How to integrate ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
+# Do you have questions about integrating ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
 React Magento 2 implementation. This Simple module explains how to add and use ReactJS or any other framework micro-frontend UI Components with Magento 2 and forget about Knockout/JQuery Magento 2 UI without migration to a new theme(Works with existing theme and designs). Checkout, admin, customer account, and any other part of your store can work using legacy Magento 2 JS implementation
 
 ![React + Magento 2](https://github.com/Genaker/reactmagento2/blob/master/KnockoutMagento2React.png)
 
 # Updates:
-- A new improved version of the React 17 is available as a **react-17** branch (https://github.com/Genaker/reactmagento2/tree/react-17)
+- A new, improved version of the React 17 is available as a **react-17** branch (https://github.com/Genaker/reactmagento2/tree/react-17)
 - This version provides stand-along React 17 without using RequireJS
 - Default branch changed to **react-17**
-- Composer package creted **composer require genaker/magento-reactjs**
+- Composer package created **composer require genaker/magento-reactjs**
 - VueJS implementation 
 - Magento Configuration enable React, VueJS
 - Remove Magento's default JS Junk (Require, Knockout, jQuery) configuration. You will need to implement the required functionality or use Magento Open Source ReactJS Luma Theme
-- CSS optimizer feater added. Add optimised CSS files to pub/static/styles-(l|m).css and replace the default Magento one 
+- CSS optimizer feature added. Add optimized CSS files to pub/static/styles-(l|m).css and replace the default Magento one 
 - Magento ReactJS Luma theme released
 
 # Magento Blazing-Fast React Luma Theme Implementation:
