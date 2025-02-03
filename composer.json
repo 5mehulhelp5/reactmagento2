@@ -20,7 +20,7 @@
             "registration.php"
         ],
         "psr-4": {
-            "React\\React\\": "React/React"
+            "React\\React\\": ""
         }
     }
 }
