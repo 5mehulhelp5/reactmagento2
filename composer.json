@@ -17,7 +17,7 @@
     "require": {},
     "autoload": {
         "files": [
-            "React/React/registration.php"
+            "registration.php"
         ],
         "psr-4": {
             "React\\React\\": "React/React"
