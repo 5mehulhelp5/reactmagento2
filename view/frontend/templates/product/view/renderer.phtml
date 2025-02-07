@@ -1,0 +1,199 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+?>
+<?php
+/** @var $block \Magento\Swatches\Block\Product\Renderer\Configurable */
+/** @var \Magento\Swatches\ViewModel\Product\Renderer\Configurable $configurableViewModel */
+$configurableViewModel = $block->getConfigurableViewModel()
+?>
+
+<?php
+$swatchData =
+    [
+    "jsonConfig" => json_decode($block->getJsonConfig(), true),
+    "jsonSwatchConfig" => json_decode($block->getJsonSwatchConfig(), true),
+    "mediaCallback" => json_decode($block->escapeJs($block->escapeUrl($block->getMediaCallback())), true),
+    "jsonSwatchImageSizeConfig" => json_decode($block->getJsonSwatchSizeConfig(), true),
+    "showTooltip" => json_decode($block->escapeJs($configurableViewModel->getShowSwatchTooltip()), true),
+];
+$configurableImages = $swatchData["jsonConfig"]['images'];
+$swatchConfig = json_decode($block->getJsonConfig(), true);
+$swatchAttributes = json_decode($block->getJsonSwatchConfig(), true);
+
+$optionToImage = [];
+$imageIndex = $swatchData["jsonConfig"]['index'];
+foreach ($imageIndex as $imageId => $options) {
+    foreach ($options as $option) {
+        $optionToImage[$option] = $imageId;
+    }
+}
+
+//dd($optionToImage);
+$configurableGallary = [];
+
+foreach ($configurableImages as $productId => $images) {
+    $galleryHtml = '<div class="gallery" id="product-gallery">
+        <div class="m-img">';
+
+    // Loop through images to find the main image
+    foreach ($images as $image) {
+        if ($image['isMain']) {
+            $galleryHtml .= '<img src="' . $image['img'] . '" alt="' . htmlspecialchars($image['caption']) . '" id="mImg-' . $productId . '" width="700px" height="700px">';
+        }
+    }
+
+    $galleryHtml .= '</div>
+        <div class="thmb">';
+
+    // Loop through images to generate thumbnails
+    foreach ($images as $image) {
+        $galleryHtml .= '<img src="' . $image['thumb'] . '" loading="lazy" alt="' . htmlspecialchars($image['caption']) . '" class="thumb" onclick="document.getElementById(\'mImg-' . $productId . '\').src=\'' . $image['img'] . '\'">';
+    }
+
+    $galleryHtml .= '</div>
+    </div>';
+
+    // Store the generated HTML in the array
+    $configurableGallery[$productId] = $galleryHtml;
+}
+
+?>
+<script>
+var confGallery = <?=json_encode($configurableGallery)?>;
+</script>
+
+<div class="swatch-opt" data-role="swatch-options"></div>
+
+
+<div class="product-options-wrapper" id="product-options-wrapper">
+        <div class="fieldset" tabindex="0">
+            <div class="swatch-opt" data-role="swatch-options" data-rendered="true">
+
+                <?php if (!empty($swatchConfig['attributes'])): ?>
+                    <?php foreach ($swatchConfig['attributes'] as $attributeId => $swatchData): ?>
+                        <div class="swatch-attribute <?=$escaper->escapeHtmlAttr($swatchData['code'])?>"
+                             data-attribute-code="<?=$escaper->escapeHtmlAttr($swatchData['code'])?>"
+                             data-attribute-id="<?=$escaper->escapeHtmlAttr($attributeId)?>">
+
+                            <span id="option-label-<?=$escaper->escapeHtmlAttr($swatchData['code'])?>-<?=$escaper->escapeHtmlAttr($attributeId)?>"
+                                  class="swatch-attribute-label"><?=$escaper->escapeHtml($swatchData['code'])?></span>
+                            <span class="swatch-attribute-selected-option"></span>
+
+                            <div class="swatch-attribute-options clearfix">
+                                <?php foreach ($swatchAttributes[$attributeId] as $optionId => $optionData): ?>
+                                    <?php if (!is_array($optionData) || !isset($optionData['type'])) {
+    continue;
+}
+?>
+
+                                    <div class="swatch-option <?=$optionData['type'] == 1 ? 'color' : 'text'?>"
+                                         data-option-type="<?=$escaper->escapeHtmlAttr($optionData['type'])?>"
+                                         data-option-id="<?=$escaper->escapeHtmlAttr($optionId)?>"
+                                         data-option-gallery-id="<?=$escaper->escapeHtmlAttr($optionToImage[$optionId])?>"
+                                         data-option-label="<?=$escaper->escapeHtmlAttr($optionData['label'] ?? '')?>"
+                                         style="<?=$optionData['type'] == 1 ? 'background:' . $escaper->escapeHtmlAttr($optionData['value']) . ' no-repeat center;' : ''?>">
+                                        <?=$optionData['type'] == 0 ? $escaper->escapeHtml($optionData['value']) : ''?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <input class="swatch-input super-attribute-select" name="super_attribute[<?=$attributeId?>]" type="text" value="" data-selector="super_attribute[<?=$attributeId?>]" data-validate="{required: true}" aria-required="true">
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const swatchContainers = document.querySelectorAll(".swatch-attribute");
+    const addToCartButton = document.getElementById("product-addtocart-button");
+
+    function checkAllSelected() {
+        let allSelected = true;
+
+        swatchContainers.forEach(container => {
+            const selectedOption = container.querySelector(".swatch-option.selected");
+            if (!selectedOption) {
+                allSelected = false;
+            }
+        });
+
+        // Enable the button only if all swatches are selected
+        if (allSelected) {
+            addToCartButton.removeAttribute("disabled");
+        } else {
+            addToCartButton.setAttribute("disabled", "true");
+        }
+    }
+
+    // Attach event listeners to all swatch options
+    document.querySelectorAll(".swatch-option").forEach(option => {
+        option.addEventListener("click", function () {
+            // Remove previous selection in the same attribute group
+            const parent = this.closest(".swatch-attribute");
+            parent.querySelectorAll(".swatch-option").forEach(opt => opt.classList.remove("selected"));
+            // Mark this one as selected
+            this.classList.add("selected");
+            // Check if all swatches are selected
+            checkAllSelected();
+        });
+    });
+
+    // Initial check in case the page loads with pre-selected values
+    checkAllSelected();
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Select all swatch options
+    document.querySelectorAll(".swatch-option").forEach(function (swatch) {
+        swatch.addEventListener("click", function () {
+            let parent = swatch.closest(".swatch-attribute");
+
+            // Remove 'selected' from all siblings
+            parent.querySelectorAll(".swatch-option").forEach(function (sibling) {
+                sibling.classList.remove("selected");
+            });
+
+            // Add 'selected' class to the clicked swatch
+            swatch.classList.add("selected");
+
+            // Update the selected label
+            let selectedLabel = swatch.getAttribute("data-option-label");
+            let selectedTextElement = parent.querySelector(".swatch-attribute-selected-option");
+            if (selectedTextElement) {
+                selectedTextElement.textContent = selectedLabel;
+            }
+
+            // Update the hidden input field with selected option ID
+            let hiddenInput = parent.querySelector(".swatch-input");
+            if (hiddenInput) {
+                hiddenInput.value = swatch.getAttribute("data-option-id");
+            }
+        });
+    });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Select all color swatch options
+    const swatchOptions = document.querySelectorAll(".swatch-option.color");
+
+    swatchOptions.forEach(swatch => {
+        swatch.addEventListener("click", function () {
+            // Get the selected option ID from data attributes
+            const selectedGalleryOptionId = parseInt(this.getAttribute("data-option-gallery-id"));
+
+            // Find the product gallery container
+            const galleryContainer = document.getElementById("product-gallery");
+
+            if (galleryContainer && confGallery[selectedGalleryOptionId]) {
+                // Update the gallery with the new HTML
+                galleryContainer.innerHTML = confGallery[selectedGalleryOptionId];
+            }
+        });
+    });
+});
+</script>

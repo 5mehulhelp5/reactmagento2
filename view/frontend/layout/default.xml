@@ -5,5 +5,23 @@
             <block class="Magento\Framework\View\Element\Template" template="React_React::react-component.phtml" ifconfig="react_vue_config/react/enable"/>
             <block class="Magento\Framework\View\Element\Template" template="React_React::vue-component.phtml" ifconfig="react_vue_config/vue/enable"/>
         </referenceContainer>
+        <referenceContainer name="footer">
+                <block class="Magento\Framework\View\Element\Template"
+                name="react-luma.footer.block"
+                template="React_React::react-footer.phtml"/>
+        </referenceContainer>
+        <referenceContainer name="head.additional">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="react-luma.head.block"
+                   template="React_React::react-header.phtml"/>
+        </referenceContainer>
+        <referenceBlock name="navigation.sections">
+            <block class="Magento\Framework\View\Element\Template" name="store.link2" group="navigation-sections" template="React_React::topmenu-account.phtml">
+                    <arguments>
+                        <argument name="title" translate="true" xsi:type="string">Account</argument>
+                    </arguments>
+            </block>
+        </referenceBlock>
+        <referenceBlock name="store.links" remove="true" />
     </body>
 </page>

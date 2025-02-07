@@ -1,0 +1,19 @@
+<div class="customer-menu" data-target="dropdown" bis_skin_checked="1" aria-hidden="true">
+    <span id="acnnn"></span>
+    <ul class="header links">
+        <li class="link account login"><a href="/customer/account/" id="ca-m">My Account</a></li>
+        <li class="link wishlist login" data-bind="scope: 'wishlist'">
+            <a href="/wishlist/">My Wish List        <!-- ko if: wishlist().counter --><!-- /ko -->
+            </a>
+        </li>
+        <li class="link authorization-link login" id="calin-m" data-label="or">
+            <a href="/customer/account/logout/"> Sign Out</a>
+        </li>
+        <li class="link authorization-link logout" id="calout-m" data-label="or">
+            <a href="/customer/account/login/"> Login</a>
+        </li>
+        <li class="link authorization-link logout" id="reg-m" data-label="or">
+            <a href="/customer/account/create/"> Register</a>
+        </li>
+    </ul>
+</div>

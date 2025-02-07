@@ -2,11 +2,14 @@
 
 namespace React\React;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Asset\GroupedCollection;
 use Magento\Framework\View\Page\Config;
 use Magento\Framework\View\Page\Config\Metadata\MsApplicationTileImage;
 use Magento\Framework\View\Page\Config\Renderer;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Page config Renderer model Plugin
@@ -15,6 +18,15 @@ use Magento\Framework\View\Page\Config\Renderer;
  */
 class ReactInjectPlugin extends Renderer
 {
+
+    public $actionFilter = [
+        'catalog_category_view',
+        'cms_index_index',
+        'cms_page_view',
+        'catalog_product_view',
+        'catalogsearch_result_index',
+    ];
+
     /**
      * @param Config $pageConfig
      * @param \Magento\Framework\View\Asset\MergeService $assetMergeService
@@ -31,7 +43,10 @@ class ReactInjectPlugin extends Renderer
         \Magento\Framework\Escaper $escaper,
         \Magento\Framework\Stdlib\StringUtils $string,
         \Psr\Log\LoggerInterface $logger,
-        MsApplicationTileImage $msApplicationTileImage = null
+        MsApplicationTileImage $msApplicationTileImage = null,
+        private ScopeConfigInterface $config,
+        private State $state,
+        private StoreManagerInterface $store
     ) {
         parent::__construct($pageConfig, $assetMergeService, $urlBuilder, $escaper, $string, $logger, $msApplicationTileImage);
     }
@@ -44,23 +59,18 @@ class ReactInjectPlugin extends Renderer
      */
     protected function renderAssetHtml(\Magento\Framework\View\Asset\PropertyGroup $group)
     {
+        $startTime = microtime(true);
 
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $config = $objectManager->get(\Magento\Framework\App\Config\ScopeConfigInterface::class);
-        $reactEnabled = boolval($config->getValue('react_vue_config/react/enable'));
-        $vueEnabled = boolval($config->getValue('react_vue_config/vue/enable'));
+
+        $reactEnabled = boolval($this->config->getValue('react_vue_config/react/enable'));
+        $vueEnabled = boolval($this->config->getValue('react_vue_config/vue/enable'));
         /* remove default magento Junky JS */
-        $removeAdobeJSJunk = boolval($config->getValue('react_vue_config/junk/remove'));
-        $removeCSSjunk = boolval($config->getValue('react_vue_config/css/remove'));
-        $state = $objectManager->get('Magento\Framework\App\State');
-        $store = $objectManager->get(\Magento\Store\Model\StoreManagerInterface::class);
-        $area = $state->getAreaCode();
+        $removeAdobeJSJunk = boolval($this->config->getValue('react_vue_config/junk/remove'));
+        $removeCSSjunk = boolval($this->config->getValue('react_vue_config/css/remove'));
+
+        $area = $this->state->getAreaCode();
         $pageFilter = ['checkout', 'customer'];
-        $actionFilter = ['catalog_category_view',
-            'cms_index_index',
-            'cms_page_view',
-            'catalog_product_view',
-            'catalogsearch_result_index'];
 
         $request = $objectManager->get(\Magento\Framework\App\Request\Http::class);
         $actionName = $request->getFullActionName();
@@ -71,91 +81,144 @@ class ReactInjectPlugin extends Renderer
         $block = $objectManager->get(\Magento\Framework\View\Element\Template::class);
         $assets = $this->processMerge($group->getAll(), $group);
         $attributes = $this->getGroupAttributes($group);
-
+        $type = $group->getProperties()['content_type'];
         $result = '';
         $template = '';
         $assetOptimized = false;
-        $assetOptimized2 = false;
+        $assetOptimizedLarge = false;
+        $assetProductOptimized = false;
+        $assetCategoryOptimized = false;
+        $removeController = in_array($actionName, $this->actionFilter);
+        $isProduct = in_array($actionName, ['catalog_product_view']);
+        $isCategory = in_array($actionName, ['catalog_category_view', 'catalogsearch_result_index']);
 
         try {
             /** @var $asset \Magento\Framework\View\Asset\AssetInterface */
-            //Changes Start
-            $baseURL = $store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
-            foreach ($assets as $key => $asset) {
-                if (in_array($actionName, $actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
-                    // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-m.css
-                    $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
-                    $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
-                    if (file_exists($optimisedCSSFilePath)) {
-                        //echo $optimisedCSSFileUrl;
-                        $assetOptimized = $optimisedCSSFileUrl;
+            // Changes Start
+            $baseURL = $this->store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
+            if ($type === 'css') {
+                foreach ($assets as $key => $asset) {
+                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
+                        // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-m.css
+                        $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
+                        $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
+                        $optimisedProductCSSFileUrl = $baseURL . 'product-styles-m.css';
+                        $optimisedProductCSSFileCriticalUrl = $baseURL . 'product-critical-m.css';
+                        $optimisedProductCSSFileCriticalPath = BP . '/pub/static/product-critical-m.css';
+                        $optimisedProductCSSFilePath = BP . '/pub/static/product-styles-m.css';
+                        $optimisedCategoryCSSFileUrl = $baseURL . 'category-styles-m.css';
+                        $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
+                        $optimisedCategoryCSSFileCriticalUrl = $baseURL . 'category-critical-m.css';
+                        $optimisedCategoryCSSFileCriticalPath = BP . '/pub/static/category-critical-m.css';
+
+                        if (file_exists($optimisedCSSFilePath)) {
+                            // echo $optimisedCSSFileUrl;
+                            $assetOptimized = $optimisedCSSFileUrl;
+                            unset($assets[$key]);
+                        }
+                        if (file_exists($optimisedProductCSSFilePath) && $isProduct) {
+                            // echo $optimisedCSSFileUrl;
+                            $assetProductOptimized = $optimisedProductCSSFileUrl;
+                            unset($assets[$key]);
+                        }
+                        if (file_exists($optimisedCategoryCSSFilePath) && $isCategory) {
+                            // echo $optimisedCSSFileUrl;
+                            $assetCategoryOptimized = $optimisedCategoryCSSFileUrl;
+                            unset($assets[$key]);
+                        }
+
+                    }
+                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'styles-l')) {
+                        // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-l.css
+                        $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.css';
+                        $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
+                        if (file_exists($optimisedCSSFilePathLarge)) {
+                            // echo $optimisedCSSFileUrl;
+                            $assetOptimizedLarge = $optimisedCSSFileUrlLarge;
+                            unset($assets[$key]);
+                        } else {
+                            @header('Optimised-CSS: false');
+                        }
+                    }
+                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'calendar')) {
                         unset($assets[$key]);
-                    } else {
-                        @header("Optimised-CSS: false");
+                    }
+                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'gallery')) {
+                        unset($assets[$key]);
+                    }
+                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'uppy-custom')) {
+                        unset($assets[$key]);
                     }
                 }
-                if (in_array($actionName, $actionFilter) && strpos($asset->getUrl(), 'styles-l')) {
-                    // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-l.css
-                    $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.css';
-                    $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
-                    if (file_exists($optimisedCSSFilePathLarge)) {
-                        //echo $optimisedCSSFileUrl;
-                        $assetOptimized2 = $optimisedCSSFileUrlLarge;
+            }
+            // dump($assets);
+            foreach ($assets as $key => $asset) {
+                if ($type === 'js') {
+                    if (strpos($asset->getUrl(), 'js/react')) {
                         unset($assets[$key]);
-                    } else {
-                        @header("Optimised-CSS: false");
+                        if ($reactEnabled) {
+                            array_unshift($assets, $asset);
+                        }
+                    }
+                    if (strpos($asset->getUrl(), 'vue')) {
+                        unset($assets[$key]);
+                        if ($vueEnabled) {
+                            array_unshift($assets, $asset);
+                        }
+                    }
+                    if (strpos($asset->getUrl(), 'require')) {
+                        if ($removeAdobeJSJunk)
+                        //dd($removeAdobeJSJunk);
+                        {
+                            unset($assets[$key]);
+                        }
+
+                        // junk True ; protection False
+                        // echo "require " . (string) $removeProtection;
+                        if (!$removeAdobeJSJunk || !in_array($actionName, $this->actionFilter));
+                        array_unshift($assets, $asset);
+                    }
+                    if (strpos($asset->getUrl(), 'require')) {
+                        if ($removeAdobeJSJunk)
+                        //dd($removeAdobeJSJunk);
+                        {
+                            unset($assets[$key]);
+                        }
+
+                        // junk True ; protection False
+                        // echo "require " . (string) $removeProtection;
+                        if (!$removeAdobeJSJunk || !in_array($actionName, $this->actionFilter));
+                        array_unshift($assets, $asset);
+                    }
+                }
+                if ($type === 'css') {
+                    if (strpos($asset->getUrl(), 'styles-')) {
+                        unset($assets[$key]);
+                        if (!$removeCSSjunk || !in_array($actionName, $this->actionFilter)) {
+                            array_unshift($assets, $asset);
+                        }
                     }
                 }
             }
-
-            foreach ($assets as $key => $asset) {
-                if (strpos($asset->getUrl(), 'js/react')) {
-                    unset($assets[$key]);
-                    if ($reactEnabled) {
-                        array_unshift($assets, $asset);
-                    }
-
-                } else if (strpos($asset->getUrl(), 'vue')) {
-                    unset($assets[$key]);
-                    if ($vueEnabled) {
-                        array_unshift($assets, $asset);
-                    }
-
-                } else if (strpos($asset->getUrl(), 'require')) {
-                    if ($removeAdobeJSJunk)
-                    //dd($removeAdobeJSJunk);
-                    {
-                        unset($assets[$key]);
-                    }
-
-                    // junk True ; protection False
-                    // echo "require " . (string) $removeProtection;
-                    if (!$removeAdobeJSJunk || !in_array($actionName, $actionFilter));
-                    array_unshift($assets, $asset);
-                } else if (strpos($asset->getUrl(), 'styles-')) {
-                    unset($assets[$key]);
-                    if (!$removeCSSjunk || !in_array($actionName, $actionFilter)) {
-                        array_unshift($assets, $asset);
-                    }
-
-                }
-            }
-            //we need execute it one more time to make scripts the same order
+            // we need execute it one more time to make scripts the same order
             foreach ($assets as $key => $asset) {
                 if (strpos($asset->getUrl(), 'require')) {
                     unset($assets[$key]);
                     array_unshift($assets, $asset);
+                    // dd($assets);
                 }
             }
 
-            foreach ($assets as $key => $asset) {
-                if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
-                    unset($assets[$key]);
-                    array_unshift($assets, $asset);
+            if ($type === 'js') {
+                foreach ($assets as $key => $asset) {
+                    if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
+                        unset($assets[$key]);
+                        array_unshift($assets, $asset);
+                    }
                 }
             }
 
-            //Changes Ends
+            // Changes Ends
 
             foreach ($assets as $asset) {
                 $template = $this->getAssetTemplate(
@@ -168,13 +231,56 @@ class ReactInjectPlugin extends Renderer
             $this->logger->critical($e);
             $result .= sprintf($template, $this->urlBuilder->getUrl('', ['_direct' => 'core/index/notFound']));
         }
-        if ($assetOptimized !== false) {
+        // mobile CSS
+        if ($assetOptimized && !($isProduct || $isCategory)) {
             $result = '<link  rel="stylesheet" type="text/css"  media="all" href="' . $assetOptimized . '" />' . "\n" . $result;
         }
-        if ($assetOptimized2 !== false) {
-            $result = '<link  rel="stylesheet" type="text/css"  media="screen and (min-width: 768px)" href="' . $assetOptimized2 . '" />' . "\n" . $result;
+        if ($assetOptimizedLarge) {
+            $result = '<link  rel="stylesheet" type="text/css"  media="screen and (min-width: 768px)" href="' . $assetOptimizedLarge . '" />' . "\n" . $result;
         }
+        if ($assetProductOptimized && $isProduct) {
+            if (file_exists($optimisedProductCSSFileCriticalPath)) {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetProductOptimized . '" />' . "\n" . $result;
+            } else {
+                $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetProductOptimized . '" />' . "\n" . $result;
+            }
+        }
+        if ($assetCategoryOptimized && $isCategory) {
+            if (file_exists($optimisedCategoryCSSFileCriticalPath)) {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedCategoryCSSFileCriticalUrl . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
+            } else {
+                $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
+            }
+        }
+
+        if ($removeAdobeJSJunk && $type === 'js' && $removeController) {
+            // dd($result);
+            // Remove RequireJS and other scripts if needed
+            $result = preg_replace('/<script[^>]*require[^>]*><\/script>/', '', $result);
+        }
+        $endTime = microtime(true);
+        $time = $endTime - $startTime;
+        //header("Server-Timing: x-mag-react;dur=" . number_format($time * 1000, 2), false);
         return $result;
     }
 
+    public function checkFile($file)
+    {
+        return file_exists($file);
+    }
+
+    /*
+ * Alternative
+ *  protected function getIncludes()
+ *  {
+ *      $html = parent::getIncludes();
+ *
+ *      // Remove all `<script type="text/x-magento-init">` blocks
+ *      $html = preg_replace('/<script[^>]+type=["\']text\/x-magento-init["\'][^>]*>.*?<\/script>/s', '', $html);
+ *
+ *      return $html;
+ *  }
+ */
 }

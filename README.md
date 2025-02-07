@@ -18,9 +18,7 @@ React Magento 2 implementation. This Simple module explains how to add and use R
 
 <img src="https://raw.githubusercontent.com/Genaker/Luma-React-PWA-Magento-Theme/master/web/images/logo.jpeg" alt="magento react theme"/>
 <br>
-Repo is here: https://github.com/Genaker/Luma-React-PWA-Magento-Theme <br><br>
-
-**In 2024, we reworked the extension, which implements all necessary theme elements. So, to make any theme like React fast, you need to install an extension and adjust your theme.**
+Repo is here: https://github.com/Genaker/Luma-React-PWA-Magento-Theme
 
 # About the Magento 2 ReactJS implementation module 
 It is not PWA or headless implementation which is impossible to use with an existing website. Also, Single Page Application (SPA) PWA Magento 2 implementations have issues with Magento 2 API performance - too slow. This implementation is High-Performance Hybrid React integration with magento2 (with Magento 1 also easy to use) it uses inline JSON directly from the page. The same approach is used in Magento 2 backend and frontend checkout, color swatches by default. Also can use Ajax HTTP call to fetch data (not the best solution Magento API is slow and will increase the load on your backend server). Or you can use my future project "Microservices Magento" to fetch data.
@@ -59,7 +57,7 @@ Read this article: https://blog.vuestorefront.io/yehor-shytikov-pwa-is-a-real-re
 
 Magento 2  has a better framework optimization from a development perspective. It allows developers to use the dependency injection, plugin system (**which is considered harmful AOP software development principle** read: https://yegorshytikov.medium.com/magento-2-plug-ins-aod-architecture-are-harmful-dc23c4edb534), and XML notations for layout. I personally like the folder structure in which one directory is one module. Magento 1 was messy since one module contains several folders.
 
-Magento 2 uses a modern Symphony approach, but it still has a lot of legacy code. Even though it introduces a new way of embracing front-end development, however from a nowadays perspective it is not enough(legacy). No wonder Magento 2 was released before Vue.js and React took the world's popularity. These JS frameworks add more features for developers and - in general - provide more possibilities. 
+Magento 2 uses a modern Symphony approach but it still has a lot of legacy code. Even though it introduces a new way of embracing front-end development, however from a nowadays perspective it is not enough(legacy). No wonder as Magento 2 was released before Vue.js and React took the world popularity. These JS frameworks add more features for developers and - in general - provide more possibilities. 
 
 # Install Magento ReactJS/VueJS extension via composer:
 ```
@@ -90,7 +88,7 @@ Web Puck compiles everything automatically into React/React/view/base/web/js/ind
 
 # Easy deployment 
 
-Usage of the web-pack is sometimes too difficult for Magento developers. I have created another way to use React with Magento without any compilation/complication.
+Usage of the web-pack sometimes is too difficult for Magento developers. I have created another way to use React with Magento without any compilation/complication.
 Simply add these files to the Magento installation:
 ```
 // React JS itself 

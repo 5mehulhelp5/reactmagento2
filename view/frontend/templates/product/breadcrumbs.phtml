@@ -1,0 +1,159 @@
+<?php
+use Magento\Catalog\Model\ResourceModel\Category\Collection;
+
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+/** @var \Magento\Theme\Block\Html\Breadcrumbs $block */
+/** @var \Magento\Catalog\ViewModel\Product\Breadcrumbs $viewModel */
+$startTime = microtime(true);
+
+$viewModel = $block->getData('viewModel');
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$product = $objectManager->get('Magento\Framework\Registry')->registry('current_product');
+$collection = $objectManager->get(Collection::class);
+$categoryHelper = $objectManager->get(\Magento\Catalog\Helper\Data::class);
+$categoryIds = $product->getCategoryIds();
+
+$categoryPath = [];
+
+if (!empty($categoryIds)) {
+
+    $categoryRepository = $objectManager->get(\Magento\Catalog\Model\CategoryRepository::class);
+
+    // Get the category with the **deepest path** (most specific category)
+    $maxLevel = 0;
+    $selectedCategory = null;
+
+    $categories = $collection->addAttributeToSelect('entity_id')
+        ->addFieldToFilter('entity_id', ['in' => $categoryIds])->getItems();
+
+    // Stupid Adobe doesn't have getList for categories for prefetch...
+    //$categoryList = $categoryRepository->getList($searchCriteria)->getItems();
+
+    foreach ($categories as $category) {
+        try {
+            if ($category->getLevel() > $maxLevel) {
+                $maxLevel = $category->getLevel();
+                $selectedCategory = $category;
+            }
+        } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+            continue;
+        }
+    }
+
+    // If we have a selected category, build its breadcrumb path
+    if ($selectedCategory) {
+        $pathIds = explode('/', $selectedCategory->getPath()); // Category path
+
+        foreach ($pathIds as $pathId) {
+            if ($pathId > 1) { // Ignore root category (ID:1)
+                try {
+                    $parentCategory = $categoryRepository->get($pathId);
+                    $categoryPath[] = [
+                        'label' => $parentCategory->getName(),
+                        'link' => $parentCategory->getUrl(),
+                    ];
+                } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+                    continue;
+                }
+            }
+        }
+    }
+}
+
+$endTime = microtime(true);
+$time = $endTime - $startTime;
+
+// Regularly: 4-10ms.
+//header("Server-Timing: x-mag-bread;dur=" . number_format($time * 1000, 2), false);
+
+unset($categoryPath[0]);
+?>
+<style>
+/* Breadcrumbs Navigation */
+.breadcrumbs {
+    font-family: Arial, sans-serif;
+    padding: 5px 20px;
+    border-radius: 5px; /* Smooth rounded corners */
+    display: inline-block;
+}
+
+nav.breadcrumbs {
+    margin-bottom: 0;
+    padding: 0;
+    padding-left: 20px;
+}
+
+/* Breadcrumbs List */
+.breadcrumbs ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Breadcrumb Item */
+.breadcrumbs li {
+    display: flex;
+    align-items: center;
+}
+
+
+.breadcrumbs a:hover {
+    color: #0056b3; /* Darker blue */
+}
+
+/* Separator */
+.breadcrumbs li:not(:last-child)::after {
+    content: '›';
+    color: #888;
+    margin: 0 8px;
+    font-size: 18px;
+}
+
+/* Last Item - Active Page */
+.breadcrumbs li:last-child {
+    font-weight: bold;
+    color: #000;
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .breadcrumbs {
+        padding: 8px 15px;
+    }
+
+    .breadcrumbs li {
+        font-size: 14px;
+    }
+
+    .breadcrumbs li:not(:last-child)::after {
+        margin: 0 5px;
+    }
+}
+</style>
+<nav class="breadcrumbs">
+<ul>
+    <li><a href="<?=$block->getBaseUrl();?>">Home</a></li>
+
+    <?php foreach ($categoryPath as $category): ?>
+        <li>
+            <a href="<?=$block->escapeUrl($category['link']);?>">
+                <?=$block->escapeHtml($category['label']);?>
+            </a>
+        </li>
+    <?php endforeach; ?>
+
+    <li><?=$block->escapeHtml($product->getName());?></li>
+</ul>
+</nav>
+
+<?php
+//$widget = $this->helper(\Magento\Framework\Json\Helper\Data::class)->jsonDecode($viewModel->getJsonConfigurationHtmlEscaped());
+//$widgetOptions = $this->helper(\Magento\Framework\Json\Helper\Data::class)->jsonEncode($widget['breadcrumbs']);
+//dd($widgetOptions);
+?>

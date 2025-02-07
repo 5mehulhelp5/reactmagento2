@@ -1,0 +1,167 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/**
+ * Product media data template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Gallery
+ * @var $escaper \Magento\Framework\Escaper
+ */
+?>
+
+<?php
+$product = $block->getProduct();
+$images = $block->getGalleryImages()->getItems();
+$mainImage = current(array_filter($images, function ($img) use ($block) {
+    return $block->isMainImage($img);
+}));
+
+if (!empty($images) && empty($mainImage)) {
+    $mainImage = $block->getGalleryImages()->getFirstItem();
+}
+
+$helper = $block->getData('imageHelper');
+$mainImageData = $mainImage ?
+$mainImage->getData('medium_image_url') :
+$helper->getDefaultPlaceholderUrl('image');
+$imageWidth = $block->getImageAttribute('product_page_image_medium', 'width');
+$imageHeight = $block->getImageAttribute('product_page_image_medium', 'height');
+$mobileImageUrl = $helper->init($product, 'product_page_image_small')->resize(365, 260)->keepAspectRatio(true)->setQuality(85)->getUrl();
+
+$gallaryData = $block->getGalleryImagesJson();
+
+$images = json_decode($gallaryData, true);
+//dump($images);
+?>
+
+<!-- Gallery Container -->
+<div class="gallery" id="product-gallery">
+    <!-- Main Image Display -->
+    <div class="m-img">
+        <?php foreach ($images as $n => $image): ?>
+            <?php if ($image['isMain']): ?>
+                <!-- Responsive image -->
+                <picture id="mob-pict">
+                    <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
+                    <source media="(max-width: 1024px)" srcset="<?=$image['img']?>">
+                    <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" height="700px">
+                </picture>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Thumbnail Navigation -->
+    <div class="thmb">
+        <?php foreach ($images as $image): ?>
+            <img src="<?=$image['thumb'];?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>'">
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<style>
+/* Gallery Styling */
+.gallery {
+    min-height: 530px;
+    width: 700px;
+    margin: auto;
+    text-align: center;
+}
+@media only screen and (min-width: 767px){
+#product-gallery {
+    min-height: 800px;
+}
+}
+/* Main Image */
+.m-img img {
+    width: 100%;
+    min-height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: opacity 0.3s ease-in-out;
+}
+/* thmb */
+.thmb {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 10px;
+}
+.thmb img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 2px solid transparent;
+    transition: border 0.3s ease-in-out;
+}
+
+/* Highlight selected thumbnail */
+.thmb img:hover {
+    border: 2px solid #007bff;
+}
+
+/* 📌 Responsive Adjustments */
+@media (max-width: 768px) {
+    .gallery {
+        min-height: 350px;
+        max-width: 90%;
+    }
+    .m-img img {
+        max-height: 300px;
+        min-height: 255px;
+    }
+    .thmb {
+        gap: 5px;
+    }
+    .thmb img {
+        width: 70px;
+        height: 90px;
+    }
+}
+
+@media (max-width: 480px) {
+    .m-img img {
+        max-height: 250px;
+    }
+    .thmb img {
+        width: 60px;
+        height: 80px;
+    }
+}
+</style>
+<?php //Other styles?>
+<style>
+
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Select all tab titles
+    const tabTitles = document.querySelectorAll(".data.item.title");
+
+    tabTitles.forEach(title => {
+        title.addEventListener("click", function () {
+            const targetId = this.querySelector("a").getAttribute("href").replace("#", "");
+            const targetContent = document.getElementById(targetId);
+
+            if (!targetContent) return;
+
+            // Hide all other tab contents and remove active class from other titles
+            document.querySelectorAll(".data.item.content").forEach(content => {
+                content.style.display = "none";
+            });
+            document.querySelectorAll(".data.item.title").forEach(tab => {
+                tab.classList.remove("active");
+            });
+
+            // Toggle the selected tab content
+            targetContent.style.display = "block";
+            this.classList.add("active");
+        });
+    });
+});
+
+</script>

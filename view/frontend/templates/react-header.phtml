@@ -1,0 +1,40 @@
+<script>
+if (typeof require !== "function") {
+    window.require = function (modules, callback) {
+    console.warn("We are not using RequireJS anymore");
+};
+}
+if (typeof require.config === "undefined") {
+    require.config = function () {};
+}
+</script>
+<style>
+    .product-options-wrapper{
+        min-height: 134px;
+    }
+    .product-info-main .product-info-stock-sku {
+    display: inline-block;
+    float: right;
+    padding-bottom: 10px;
+    padding-left: 10%;
+    text-align: right;
+    vertical-align: top;
+}
+/* Desck */
+@media only screen and (min-width: 768px) {
+form.minisearch .control {
+    display: block;
+}
+}
+
+.block-search input {
+    position: unset;
+}
+
+.form-create-account .action.submit.primary, a.action.create.primary{
+    display: none;
+}
+</style>
+<!--
+<script defer="defer" src="<?=$block->getViewFileUrl('React_React::js/cash.js');?>"> </script>
+-->

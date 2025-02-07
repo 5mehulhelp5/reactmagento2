@@ -1,12 +1,13 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
+        <!--<script defer="defer" src="React_React::js/cash.js"/>-->
         <!-- Add local CSS resources if needed-->
         <!--<css src="css/my-styles.css"/>-->
 
         <!-- The following two ways to add local JavaScript files are equal -->
         <script src="React_React::js/react.production.min.js" />
         <script src="React_React::js/react-dom.production.min.js" />
-
+       
         <!-- Include VueJS JS -->
         <script src="React_React::js/vue2.production.min.js" />
 
@@ -20,6 +21,11 @@
 
         Vue.js production version, optimized for size and speed
         <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-        -->   
+        -->
+        <remove src="fonts/opensans/light/opensans-300.woff2"/>
+        <remove src="fonts/opensans/regular/opensans-400.woff2"/>
+        <remove src="fonts/opensans/semibold/opensans-600.woff2"/>
+        <remove src="fonts/opensans/bold/opensans-700.woff2"/>
+        <!--<remove src="fonts/Luma-Icons.woff2"/>-->
     </head>
 </page>
