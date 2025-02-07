@@ -3,19 +3,19 @@
 	<default>
 		<react_vue_config>
 			<vue>
-				<enable>1</enable>
+				<enable>0</enable>
 			</vue>
 			<react>
-				<enable>1</enable>
+				<enable>0</enable>
 			</react>
 			<gridjs>
-				<enable>1</enable>
+				<enable>0</enable>
 			</gridjs>
 			<junk>
 				<remove>1</remove>
 			</junk>
 			<css>
-				<remove>0</remove>
+				<remove>1</remove>
 			</css>
 		</react_vue_config>
 	</default>
