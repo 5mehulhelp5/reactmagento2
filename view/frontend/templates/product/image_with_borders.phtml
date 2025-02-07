@@ -11,10 +11,10 @@
 $width = (int) $block->getWidth();
 $height = (int) $block->getHeight();
 $paddingBottom = $block->getRatio() * 100;
-if (!isset($_GLOBALS['cat_image'])) {
-    $_GLOBALS['cat_image'] = 0;
+if (!isset($_GET['cat_image'])) {
+    $_GET['cat_image'] = 0;
 }
-$_GLOBALS['cat_image'] = $_GLOBALS['cat_image']++;
+$_GET['cat_image']++;
 ?>
 <span class="product-image-container product-image-container-<?=/* @noEscape */$block->getProductId()?>">
     <span class="product-image-wrapper">
@@ -23,7 +23,8 @@ $_GLOBALS['cat_image'] = $_GLOBALS['cat_image']++;
                 <?=$escaper->escapeHtmlAttr($name)?>="<?=$escaper->escapeHtml($value)?>"
             <?php endforeach; ?>
             src="<?=$escaper->escapeUrl($block->getImageUrl())?>"
-            <?php if ($_GLOBALS['cat_image'] > 2) {?>
+            <?php if ($_GET['cat_image'] > 2) { ?>
+        
             loading="lazy"
             <?php }?>
             width="<?=$escaper->escapeHtmlAttr($block->getWidth())?>"
