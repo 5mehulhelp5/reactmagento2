@@ -69,6 +69,11 @@ class ReactInjectPlugin extends Renderer
         $removeAdobeJSJunk = boolval($this->config->getValue('react_vue_config/junk/remove'));
         $removeCSSjunk = boolval($this->config->getValue('react_vue_config/css/remove'));
 
+        if (isset($_GET['css-test'])){
+            // Css test mode 
+            $removeCSSjunk = false;
+        }
+
         $area = $this->state->getAreaCode();
         $pageFilter = ['checkout', 'customer'];
 
@@ -96,7 +101,7 @@ class ReactInjectPlugin extends Renderer
             /** @var $asset \Magento\Framework\View\Asset\AssetInterface */
             // Changes Start
             $baseURL = $this->store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
-            if ($type === 'css') {
+            if ($removeCSSjunk && $type === 'css') {
                 foreach ($assets as $key => $asset) {
                     if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
                         // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-m.css
@@ -231,27 +236,30 @@ class ReactInjectPlugin extends Renderer
             $this->logger->critical($e);
             $result .= sprintf($template, $this->urlBuilder->getUrl('', ['_direct' => 'core/index/notFound']));
         }
-        // mobile CSS
-        if ($assetOptimized && !($isProduct || $isCategory)) {
-            $result = '<link  rel="stylesheet" type="text/css"  media="all" href="' . $assetOptimized . '" />' . "\n" . $result;
-        }
-        if ($assetOptimizedLarge) {
-            $result = '<link  rel="stylesheet" type="text/css"  media="screen and (min-width: 768px)" href="' . $assetOptimizedLarge . '" />' . "\n" . $result;
-        }
-        if ($assetProductOptimized && $isProduct) {
-            if (file_exists($optimisedProductCSSFileCriticalPath)) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetProductOptimized . '" />' . "\n" . $result;
-            } else {
-                $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetProductOptimized . '" />' . "\n" . $result;
+
+        if ($removeCSSjunk) {
+            // mobile CSS
+            if ($assetOptimized && !($isProduct || $isCategory)) {
+                $result = '<link  rel="stylesheet" type="text/css"  media="all" href="' . $assetOptimized . '" />' . "\n" . $result;
             }
-        }
-        if ($assetCategoryOptimized && $isCategory) {
-            if (file_exists($optimisedCategoryCSSFileCriticalPath)) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedCategoryCSSFileCriticalUrl . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
-            } else {
-                $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
+            if ($assetOptimizedLarge) {
+                $result = '<link  rel="stylesheet" type="text/css"  media="screen and (min-width: 768px)" href="' . $assetOptimizedLarge . '" />' . "\n" . $result;
+            }
+            if ($assetProductOptimized && $isProduct) {
+                if (file_exists($optimisedProductCSSFileCriticalPath)) {
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetProductOptimized . '" />' . "\n" . $result;
+                } else {
+                    $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetProductOptimized . '" />' . "\n" . $result;
+                }
+            }
+            if ($assetCategoryOptimized && $isCategory) {
+                if (file_exists($optimisedCategoryCSSFileCriticalPath)) {
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedCategoryCSSFileCriticalUrl . '" />' . "\n" . $result;
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
+                } else {
+                    $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
+                }
             }
         }
 
