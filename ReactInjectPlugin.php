@@ -258,8 +258,9 @@ class ReactInjectPlugin extends Renderer
             }
             if ($assetProductOptimized && $isProduct) {
                 if ($optimisedProductCSSFileCriticalPath && file_exists($optimisedProductCSSFileCriticalPath)) {
-                    @header("Link: <" . $optimisedProductCSSFileCriticalUrl . ">; rel=preload; as=style", false);
                     if (!$criticalCSSHTML) {
+                        // ToDo: check if push works
+                        @header("Link: <" . $optimisedProductCSSFileCriticalUrl . ">; rel=preload; as=style", false);
                         $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
                     }
                     $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetProductOptimized . '" />' . "\n" . $result;
