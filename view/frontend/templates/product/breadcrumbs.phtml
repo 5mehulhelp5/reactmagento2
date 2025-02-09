@@ -84,6 +84,7 @@ nav.breadcrumbs {
     margin-bottom: 0;
     padding: 0;
     padding-left: 20px;
+    width: 100%;
 }
 
 /* Breadcrumbs List */
@@ -121,21 +122,34 @@ nav.breadcrumbs {
     color: #000;
 }
 
+.bc-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    position: relative;
+    text-align: center;
+}
+
 /* Responsive - Mobile */
 @media (max-width: 768px) {
+    nav.breadcrumbs, .bc-container {
+    max-width: auto;
+    }
     .breadcrumbs {
         padding: 8px 15px;
     }
-
+    .breadcrumbs ul {
+        padding-left: 0px;  
+    }
     .breadcrumbs li {
         font-size: 14px;
     }
-
     .breadcrumbs li:not(:last-child)::after {
         margin: 0 5px;
     }
 }
 </style>
+<div class="bc-container">
 <nav class="breadcrumbs">
 <ul>
     <li><a href="<?=$block->getBaseUrl();?>">Home</a></li>
@@ -151,6 +165,7 @@ nav.breadcrumbs {
     <li><?=$block->escapeHtml($product->getName());?></li>
 </ul>
 </nav>
+    </div>
 
 <?php
 //$widget = $this->helper(\Magento\Framework\Json\Helper\Data::class)->jsonDecode($viewModel->getJsonConfigurationHtmlEscaped());

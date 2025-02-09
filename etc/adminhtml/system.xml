@@ -47,6 +47,11 @@
 					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 					<comment>Remove Magento's default CSS garbage. You will need add optimized CSS to pub/static/styles-m.css and pub/static/styles-l.css. The files will be automaticaly included if they are exists</comment>
 				</field>
+				<field id="critical" type="select"  sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>CSS to HTML</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+					<comment>Output Critical CSS to HTML</comment>
+				</field>
 			</group>
 		</section>
 	</system>

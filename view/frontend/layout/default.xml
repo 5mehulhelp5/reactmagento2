@@ -6,12 +6,12 @@
             <block class="Magento\Framework\View\Element\Template" template="React_React::vue-component.phtml" ifconfig="react_vue_config/vue/enable"/>
         </referenceContainer>
         <referenceContainer name="footer">
-                <block class="Magento\Framework\View\Element\Template"
+                <block class="React\React\Template"
                 name="react-luma.footer.block"
                 template="React_React::react-footer.phtml"/>
         </referenceContainer>
         <referenceContainer name="head.additional">
-            <block class="Magento\Framework\View\Element\Template"
+            <block class="React\React\Template"
                    name="react-luma.head.block"
                    template="React_React::react-header.phtml"/>
         </referenceContainer>

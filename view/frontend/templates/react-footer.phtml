@@ -1,21 +1,10 @@
 <?php
-$currentUrl = $block->getUrl('*/*/*', ['_current' => true, '_use_rewrite' => true]);
-$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-$regestry = $objectManager->get(\Magento\Framework\Registry::class);
-$product = $regestry->registry('current_product');
-$request = $this->getRequest();
-$controller = $request->getControllerName();
-$uenc = base64_encode($currentUrl);
+$product = $this->registry->registry('current_product');
 ?>
-<script>
-<?php if ($product) {?>
-window.productType = "<?=$product->getTypeId();?>";
-<?php }?>
-window.curentUenc = "<?=$uenc?>";
-window.controller = "<?=$controller?>";
-</script>
-<link  rel="stylesheet"  media="print" onload="this.onload=null;this.media='all';"  href="/media/styles.css" >
 
+<?php /* Only Luma Demo Needs this */ if (!$product): ?>
+<link  rel="stylesheet"  media="print" onload="this.onload=null;this.media='all';"  href="/media/styles.css" >
+<?php endif; ?>
 <style>
 /* Show only the first-level submenu on hover */
 .navigation .level0:hover > .submenu {
@@ -295,6 +284,16 @@ display: none;
 <script>
 
 var mage = (() => {
+var loaded = false;
+var doc = document;
+window.addEventListener('load', () => {
+    loaded = true;
+});
+
+function isLoaded(){
+    return loaded;
+}
+
 function getCookie(name) {
         let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? decodeURIComponent(match[2]) : null;
@@ -446,6 +445,32 @@ onDOM = (callback, ...args) => {
     document.addEventListener("DOMContentLoaded", () => callback(...args));
 }
 
+const checkInterval = 150;
+const loadTimeout = 3000
+
+// Function to run code only after the page has loaded, with optional arguments
+runAfterLoad = (interval = checkInterval, callback, ...args) => {
+    let counter = 5;
+    const checkLoad = setInterval(() => {
+        if (isLoaded()) {
+            clearInterval(checkLoad); 
+            callback(...args);
+        }
+        counter++;
+    }, interval);
+}
+
+loadScript = (src) => {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = () => resolve(src);
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.head.appendChild(script);
+    });
+}
+
 getUenc = () => {
     return window.curentUenc;
 }
@@ -534,9 +559,11 @@ return {
         addToWishlist,
         addToCompare,
         getFormKey,
+        isLoaded,
         getUenc,
         onLoad,
         onDOM,
+        doc
     };
 })();
 </script>

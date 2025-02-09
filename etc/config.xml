@@ -16,6 +16,7 @@
 			</junk>
 			<css>
 				<remove>1</remove>
+				<critical>1</critical>
 			</css>
 		</react_vue_config>
 	</default>

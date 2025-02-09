@@ -1,3 +1,37 @@
+<?php
+$isProductPage = $this->registry->registry('current_product') ? true : false;
+$criticalCSSHTML = boolval($this->config->getValue('react_vue_config/css/critical'));
+
+if($criticalCSSHTML || isset($_GET['css-html'])){
+    $criticalCSSHTML = true;
+}
+if($isProductPage && $criticalCSSHTML) {
+$css = @file_get_contents(BP . '/pub/static/product-critical-m.css');
+?>
+<script>
+<?php
+$product = $this->registry->registry('current_product');
+$request = $this->getRequest();
+$controller = $request->getControllerName();
+$action = $request->getActionName();
+$fullAction = $request->getFullActionName();
+$currentUrl = $block->getUrl('*/*/*', ['_current' => true, '_use_rewrite' => true]);
+$uenc = base64_encode($currentUrl);
+
+if ($product) {?>
+window.productType = "<?=$product->getTypeId();?>";
+<?php }?>
+window.curentUenc = "<?=$uenc?>";
+window.controller = "<?=$controller?>";
+window.action = "<?=$action?>";
+window.fullAction = "<?=$fullAction?>";
+</script>
+<style>
+<?=$css?>
+</style>
+<?
+}
+?>
 <script>
 if (typeof require !== "function") {
     window.require = function (modules, callback) {
@@ -9,6 +43,18 @@ if (typeof require.config === "undefined") {
 }
 </script>
 <style>
+    <?=
+    // View files must be added to inline php or compiled every time 
+    "@font-face {
+        font-family: 'luma-icons';
+        src: url('" . $block->getViewFileUrl('fonts/Luma-Icons.woff2') . "') format('woff2'),
+             url('" . $block->getViewFileUrl('fonts/Luma-Icons.woff') . "') format('woff');
+        font-weight: 400;
+        font-style: normal;
+        font-display: block;
+    }";
+    ?>
+
     .product-options-wrapper{
         min-height: 134px;
     }

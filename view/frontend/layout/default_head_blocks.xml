@@ -26,6 +26,14 @@
         <remove src="fonts/opensans/regular/opensans-400.woff2"/>
         <remove src="fonts/opensans/semibold/opensans-600.woff2"/>
         <remove src="fonts/opensans/bold/opensans-700.woff2"/>
+        <!--
+        you can also remove from here ;)
+        <remove src="css/styles-m.css"/>
+        <css src="css/styles-l.css" media="screen and (min-width: 768px)"/>
+        <remove src="css/styles-l.css" media="screen and (min-width: 768px)"/>
+        -->
+        
+        <remove src="css/print.css"/>
         <!--<remove src="fonts/Luma-Icons.woff2"/>-->
     </head>
 </page>

@@ -55,9 +55,10 @@ $images = json_decode($gallaryData, true);
 
     <!-- Thumbnail Navigation -->
     <div class="thmb">
-        <?php foreach ($images as $image): ?>
+        <?php if(count($images) > 1): foreach ($images as $image): ?>
             <img src="<?=$image['thumb'];?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>'">
-        <?php endforeach; ?>
+        <?php endforeach;endif; ?>
+        <?php if(count($images) <= 1) {echo "<style>@media (max-width: 768px) {.gallery {min-height: 255px !important;}</style>";} ?>
     </div>
 </div>
 
@@ -104,7 +105,7 @@ $images = json_decode($gallaryData, true);
     border: 2px solid #007bff;
 }
 
-/* 📌 Responsive Adjustments */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
     .gallery {
         min-height: 350px;

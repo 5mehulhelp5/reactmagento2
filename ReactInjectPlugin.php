@@ -19,6 +19,7 @@ use Magento\Store\Model\StoreManagerInterface;
 class ReactInjectPlugin extends Renderer
 {
 
+    // Allowed optimisations for
     public $actionFilter = [
         'catalog_category_view',
         'cms_index_index',
@@ -59,18 +60,20 @@ class ReactInjectPlugin extends Renderer
      */
     protected function renderAssetHtml(\Magento\Framework\View\Asset\PropertyGroup $group)
     {
+        @header("x-built-with: Ract-Luma", false);
         $startTime = microtime(true);
 
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
         $reactEnabled = boolval($this->config->getValue('react_vue_config/react/enable'));
         $vueEnabled = boolval($this->config->getValue('react_vue_config/vue/enable'));
-        /* remove default magento Junky JS */
+        /* remove default Magento Junky JS */
         $removeAdobeJSJunk = boolval($this->config->getValue('react_vue_config/junk/remove'));
         $removeCSSjunk = boolval($this->config->getValue('react_vue_config/css/remove'));
+        $criticalCSSHTML = boolval($this->config->getValue('react_vue_config/css/critical'));
 
-        if (isset($_GET['css-test'])){
-            // Css test mode 
+        if (isset($_GET['css-junk'])) {
+            // Css test mode
             $removeCSSjunk = false;
         }
 
@@ -93,6 +96,10 @@ class ReactInjectPlugin extends Renderer
         $assetOptimizedLarge = false;
         $assetProductOptimized = false;
         $assetCategoryOptimized = false;
+        $assetNotOptimisedMobile = false;
+        $optimisedProductCSSFileCriticalPath = false;
+        $optimisedCategoryCSSFileCriticalPath = false;
+
         $removeController = in_array($actionName, $this->actionFilter);
         $isProduct = in_array($actionName, ['catalog_product_view']);
         $isCategory = in_array($actionName, ['catalog_category_view', 'catalogsearch_result_index']);
@@ -105,12 +112,15 @@ class ReactInjectPlugin extends Renderer
                 foreach ($assets as $key => $asset) {
                     if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
                         // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-m.css
+                        $assetNotOptimisedMobile = $asset->getUrl();
                         $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
                         $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
+
                         $optimisedProductCSSFileUrl = $baseURL . 'product-styles-m.css';
                         $optimisedProductCSSFileCriticalUrl = $baseURL . 'product-critical-m.css';
                         $optimisedProductCSSFileCriticalPath = BP . '/pub/static/product-critical-m.css';
                         $optimisedProductCSSFilePath = BP . '/pub/static/product-styles-m.css';
+
                         $optimisedCategoryCSSFileUrl = $baseURL . 'category-styles-m.css';
                         $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
                         $optimisedCategoryCSSFileCriticalUrl = $baseURL . 'category-critical-m.css';
@@ -137,6 +147,7 @@ class ReactInjectPlugin extends Renderer
                         // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-l.css
                         $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.css';
                         $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
+                        $assetNotOptimisedLarge = $asset->getUrl();
                         if (file_exists($optimisedCSSFilePathLarge)) {
                             // echo $optimisedCSSFileUrl;
                             $assetOptimizedLarge = $optimisedCSSFileUrlLarge;
@@ -239,26 +250,39 @@ class ReactInjectPlugin extends Renderer
 
         if ($removeCSSjunk) {
             // mobile CSS
-            if ($assetOptimized && !($isProduct || $isCategory)) {
+            if ($assetOptimized && !($assetProductOptimized || $assetCategoryOptimized)) {
                 $result = '<link  rel="stylesheet" type="text/css"  media="all" href="' . $assetOptimized . '" />' . "\n" . $result;
             }
             if ($assetOptimizedLarge) {
                 $result = '<link  rel="stylesheet" type="text/css"  media="screen and (min-width: 768px)" href="' . $assetOptimizedLarge . '" />' . "\n" . $result;
             }
             if ($assetProductOptimized && $isProduct) {
-                if (file_exists($optimisedProductCSSFileCriticalPath)) {
-                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
+                if ($optimisedProductCSSFileCriticalPath && file_exists($optimisedProductCSSFileCriticalPath)) {
+                    @header("Link: <" . $optimisedProductCSSFileCriticalUrl . ">; rel=preload; as=style", false);
+                    if (!$criticalCSSHTML) {
+                        $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
+                    }
                     $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetProductOptimized . '" />' . "\n" . $result;
                 } else {
                     $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetProductOptimized . '" />' . "\n" . $result;
                 }
+            } else if (!$assetProductOptimized && $isProduct) {
+                if ($optimisedProductCSSFileCriticalPath && file_exists($optimisedProductCSSFileCriticalPath)) {
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetNotOptimisedMobile . '" />' . "\n" . $result;
+                }
             }
             if ($assetCategoryOptimized && $isCategory) {
-                if (file_exists($optimisedCategoryCSSFileCriticalPath)) {
+                if ($optimisedCategoryCSSFileCriticalPath && file_exists($optimisedCategoryCSSFileCriticalPath)) {
                     $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedCategoryCSSFileCriticalUrl . '" />' . "\n" . $result;
                     $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
                 } else {
                     $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
+                }
+            } else if (!$assetCategoryOptimized && $isCategory) {
+                if ($optimisedCategoryCSSFileCriticalPath && file_exists($optimisedCategoryCSSFileCriticalPath)) {
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $$assetNotOptimisedLarge . '" />' . "\n" . $result;
                 }
             }
         }
@@ -276,6 +300,7 @@ class ReactInjectPlugin extends Renderer
 
     public function checkFile($file)
     {
+        // TODO: add APCu or file cache optimisation
         return file_exists($file);
     }
 
