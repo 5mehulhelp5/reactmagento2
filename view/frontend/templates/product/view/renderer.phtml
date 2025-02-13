@@ -19,9 +19,10 @@ $swatchData =
     "jsonSwatchImageSizeConfig" => json_decode($block->getJsonSwatchSizeConfig(), true),
     "showTooltip" => json_decode($block->escapeJs($configurableViewModel->getShowSwatchTooltip()), true),
 ];
+
 $configurableImages = $swatchData["jsonConfig"]['images'];
-$swatchConfig = json_decode($block->getJsonConfig(), true);
-$swatchAttributes = json_decode($block->getJsonSwatchConfig(), true);
+$swatchConfig = $swatchData["jsonConfig"];
+$swatchAttributes = $swatchData["jsonSwatchConfig"];
 
 $optionToImage = [];
 $imageIndex = $swatchData["jsonConfig"]['index'];
@@ -36,12 +37,12 @@ $configurableGallary = [];
 
 foreach ($configurableImages as $productId => $images) {
     $galleryHtml = '<div class="gallery" id="product-gallery">
-        <div class="m-img">';
+        <div class="m-img" id="m-img">';
 
     // Loop through images to find the main image
     foreach ($images as $image) {
         if ($image['isMain']) {
-            $galleryHtml .= '<img src="' . $image['img'] . '" alt="' . htmlspecialchars($image['caption']) . '" id="mImg-' . $productId . '" width="700px" height="700px">';
+            $galleryHtml .= '<img src="' . $image['img'] . '" src-full="' . $image['full'] . '" alt="' . htmlspecialchars($image['caption']) . '" id="mImg" width="700px" height="700px">';
         }
     }
 
@@ -50,7 +51,15 @@ foreach ($configurableImages as $productId => $images) {
 
     // Loop through images to generate thumbnails
     foreach ($images as $image) {
-        $galleryHtml .= '<img src="' . $image['thumb'] . '" loading="lazy" alt="' . htmlspecialchars($image['caption']) . '" class="thumb" onclick="document.getElementById(\'mImg-' . $productId . '\').src=\'' . $image['img'] . '\'">';
+        $galleryHtml .= '<img src="' . $image['thumb'] . '"
+        loading="lazy"
+        src-full="' . $image['full'] . '"
+        alt="' . htmlspecialchars($image['caption']) . '"
+        class="thumb"
+        onclick="
+            document.getElementById(\'mImg\').src=\'' . $image['img'] . '\';
+            document.getElementById(\'mImg\').setAttribute(\'src-full\', \'' . $image['full'] . '\');
+        ">';
     }
 
     $galleryHtml .= '</div>
@@ -192,6 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (galleryContainer && confGallery[selectedGalleryOptionId]) {
                 // Update the gallery with the new HTML
                 galleryContainer.innerHTML = confGallery[selectedGalleryOptionId];
+                attachClickEvent();
             }
         });
     });

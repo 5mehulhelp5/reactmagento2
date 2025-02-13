@@ -65,25 +65,26 @@ $images = json_decode($gallaryData, true);
 
 <!-- Gallery Container -->
 <div class="gallery" id="product-gallery">
+
     <!-- Main Image Display -->
-    <div class="m-img">
-        <?php foreach ($images as $n => $image): ?>
-            <?php if ($image['isMain']): ?>
-                <!-- Responsive image -->
-                <picture id="mob-pict">
-                    <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
-                    <source media="(max-width: 1024px)" srcset="<?=$image['img']?>">
-                    <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" src-full="<?=$image['img']?>" height="700px">
-                </picture>
-            <?php endif; ?>
-        <?php endforeach; ?>
-    </div>
+        <div class="m-img" id="m-img">
+            <?php foreach ($images as $n => $image): ?>
+                <?php if ($image['isMain']): ?>
+                    <!-- Responsive image -->
+                    <picture id="mob-pict">
+                        <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
+                        <source media="(max-width: 1024px)" srcset="<?=$image['img']?>">
+                        <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" src-full="<?=$image['img']?>" height="700px">
+                    </picture>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
 
     <!-- Thumbnail Navigation -->
     <div class="thmb">
         <?php if (count($images) > 1): foreach ($images as $image): ?>
-		            <img src="<?=$image['thumb'];?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>'">
-		        <?php endforeach;endif; ?>
+			            <img src="<?=$image['thumb'];?>" src-full="<?=$image['img']?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>';document.getElementById('mImg').setAttribute('src-full','<?=$image['full'];?>');">
+			        <?php endforeach;endif; ?>
         <?php if (count($images) <= 1) {echo "<style>@media (max-width: 768px) {.gallery {min-height: 255px !important;}</style>";}?>
     </div>
 </div>
@@ -91,7 +92,7 @@ $images = json_decode($gallaryData, true);
 <!-- Popup container -->
 <div id="popup" class="image-popup">
     <button class="close-btn" onclick="closePopup()">X</button>
-    <img id="popup-img" src="" alt="Full Image">
+    <img id="popup-img" src="" alt="Full Image" style="height:100%;">
 </div>
 
 <style>
@@ -273,21 +274,27 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
+
+const popup = document.getElementById('popup');
+
+function attachClickEvent(){
     // Select the image and popup elements
-    const img = document.getElementById('mImg');
-    const popup = document.getElementById('popup');
+    const img = document.getElementById('m-img');
     const popupImg = document.getElementById('popup-img');
 
     // Click event to show full-size image
     img.addEventListener('click', function () {
+        const img = document.getElementById('mImg');
         const fullSrc = img.getAttribute('src-full'); // Get full-size image URL
         popupImg.src = fullSrc;
         popup.style.display = 'flex'; // Show popup
     });
-
+}
     // Function to close popup
     function closePopup() {
-        popup.style.display = 'none';
+        if(popup){
+            popup.style.display = 'none';
+        }
     }
 
     // Close popup when clicking outside the image
@@ -296,4 +303,14 @@ document.addEventListener("DOMContentLoaded", function () {
             closePopup();
         }
     });
+
+    // Listen for ESC key press
+document.addEventListener('keydown', function (event) {
+    if (event.key === "Escape" || event.key === "Esc") { // Check for ESC key
+        closePopup();
+    }
+});
+
+attachClickEvent();
+
 </script>

@@ -1,0 +1,51 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use Magento\Catalog\Model\Product;
+use Magento\Swatches\Block\Product\Renderer\Listing\Configurable;
+use Magento\Swatches\ViewModel\Product\Renderer\Configurable as ConfigurableViewModel;
+
+/** @var Configurable $block */
+/** @var Product $product */
+$product = $block->getProduct()
+?>
+<?php if ($product && $product->isAvailable()): ?>
+    <?php $productId = $product->getId() ?>
+    <?php /** @var ConfigurableViewModel $configurableViewModel */ ?>
+    <?php $configurableViewModel = $block->getConfigurableViewModel() ?>
+    <div class="swatch-opt-<?= $block->escapeHtmlAttr($productId) ?>"
+         data-role="swatch-option-<?= $block->escapeHtmlAttr($productId) ?>"></div>
+    <?php
+    $swatchData = [ "selectorProduct"=> ".product-item-details",
+                    "onlySwatches" => true,
+                    "enableControlLabel" => false,
+                    "numberToShow" => json_decode($block->escapeJs($block->getNumberSwatchesPerProduct()), true),
+                    "jsonConfig"=> json_decode($block->getJsonConfig(), true),
+                    "jsonSwatchConfig"=>  json_decode($block->getJsonSwatchConfig(), true),
+                    "mediaCallback" => json_decode($block->escapeJs($block->escapeUrl($block->getMediaCallback())), true),
+                    "jsonSwatchImageSizeConfig" => json_decode($block->getJsonSwatchSizeConfig(), true),
+                    "showTooltip"=> json_decode($block->escapeJs($configurableViewModel->getShowSwatchTooltip()), true)];
+    
+    $configurableImages = $swatchData["jsonConfig"]['images'];
+    $swatchConfig =  $swatchData["jsonConfig"]; 
+    $swatchAttributes = $swatchData["jsonSwatchConfig"];      
+?>
+<?php /*
+    <script type="text/x-magento-init">
+        {
+            "[data-role=priceBox][data-price-box=product-id-<?= $block->escapeJs($productId) ?>]": {
+                "priceBox": {
+                    "priceConfig": {
+                        "priceFormat": <?= $block->getPriceFormatJson() ?>,
+                        "prices": <?=  $block->getPricesJson() ?>
+                    }
+                }
+            }
+        }
+    </script>
+    */
+    ?>
+<?php endif; ?>
