@@ -1,6 +1,9 @@
 # Do you have questions about integrating ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
 React Magento 2 implementation. This module explains how to add and use ReactJS or any other framework micro-frontend UI Components with Magento 2 and forget about Knockout/JQuery Magento 2 UI without migration to a new theme(Works with existing theme and designs). Checkout, admin, customer account, and any other part of your store can work using legacy Magento 2 JS implementation
 
+<img width="781" alt="image" src="https://github.com/user-attachments/assets/adad25f3-d394-4b00-8661-52e3165f6af7" />
+
+
 ![React + Magento 2](https://github.com/Genaker/reactmagento2/blob/master/KnockoutMagento2React.png)
 
 # Updates:
