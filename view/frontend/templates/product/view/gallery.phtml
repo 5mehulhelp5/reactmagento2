@@ -92,7 +92,7 @@ $images = json_decode($gallaryData, true);
 <!-- Popup container -->
 <div id="popup" class="image-popup">
     <button class="close-btn" onclick="closePopup()">X</button>
-    <img id="popup-img" src="" alt="Full Image" style="height:100%;">
+    <img id="popup-img" src="" alt="Full Image">
 </div>
 
 <style>
@@ -181,7 +181,6 @@ $images = json_decode($gallaryData, true);
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            padding: 10px;
         }
 
         /* Popup content container (keeps image & button together) */
@@ -239,9 +238,7 @@ $images = json_decode($gallaryData, true);
                 right: 45px;
                 padding: 6px 10px;
             }
-            .image-popup {
-                height: 50%;
-            }
+            
         }
 </style>
 <script>
