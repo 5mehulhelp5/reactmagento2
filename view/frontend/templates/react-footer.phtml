@@ -8,6 +8,7 @@ if($this->removeAdobeJSJunk()) {
 <script>
 var mage = (() => {
 var loaded = false;
+var localStorage = window.localStorage;
 var doc = document;
 window.addEventListener('load', () => {
     loaded = true;
@@ -33,37 +34,37 @@ function setCookie(name, value, days = 7, path = "/") {
 }
 
 function displayMessages() {
-        const cookieMessages = getCookie('mage-messages'); // Ensure the cookie name matches Magento's setup
-        if (!cookieMessages) return;
+    const cookieMessages = getCookie('mage-messages'); // Ensure the cookie name matches Magento's setup
+    if (!cookieMessages) return;
 
-        try {
-            let messages = JSON.parse(cookieMessages);
-            if (!Array.isArray(messages) || messages.length === 0) return;
-            const messageContainer = document.querySelector('.page.messages');
+    try {
+        let messages = JSON.parse(cookieMessages);
+        if (!Array.isArray(messages) || messages.length === 0) return;
+        const messageContainer = document.querySelector('.page.messages');
 
-            messageContainer.innerHTML = ""; // Clear existing messages
+        messageContainer.innerHTML = ""; // Clear existing messages
 
-            messages.forEach(message => {
-                let messageDiv = document.createElement("div");
-                messageContainer.style.display = "block";
-                messageDiv.className = `message-${message.type} ${message.type} message`;
-                messageDiv.setAttribute("data-ui-id", `message-${message.type}`);
-                messageDiv.innerHTML = `<div>${message.text}</div>`;
+        messages.forEach(message => {
+            let messageDiv = document.createElement("div");
+            messageContainer.style.display = "block";
+            messageDiv.className = `message-${message.type} ${message.type} message`;
+            messageDiv.setAttribute("data-ui-id", `message-${message.type}`);
+            messageDiv.innerHTML = `<div>${message.text}</div>`;
 
-                messageContainer.appendChild(messageDiv);
-            });
-     document.cookie = "mage-messages=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            messageContainer.appendChild(messageDiv);
+        });
+        document.cookie = "mage-messages=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             // Optionally, clear messages after 5 seconds
             setTimeout(() => {
                 const messageContainer = document.querySelector('.page.messages');
                 const messageDiv = document.querySelector("message");
                 messageContainer.innerHTML = "";
                 messageContainer.style.display = "none";
-            }, 10000);
-        } catch (error) {
-            console.error("Error parsing messages from cookie:", error);
-        }
+        }, 10000);
+    } catch (error) {
+        console.error("Error parsing messages from cookie:", error);
     }
+}
 
 const defaultSectionData = [
     "messages", "customer",
@@ -75,25 +76,64 @@ const defaultSectionData = [
 
 async function loadSectionData(sections=defaultSectionData) {
     try {
+        let valid = false;
+        let data = null;
+        const privateContentVersionCokies = getCookie('private_content_version');
+        const privateContentVersionLocal = localStorage.getItem('private_content_version');
         const url = BASE_URL+`customer/section/load/?sections=${encodeURIComponent(sections.join(','))}`;
 
-        const request = new Request(url,
-            {
-                method: 'GET',
-                cache: 'no-store',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+        if(privateContentVersionCokies && privateContentVersionLocal && 
+           privateContentVersionCokies === privateContentVersionLocal) {
+            const ttl = new Date(localStorage.getItem('mage-cache-timeout'));
+            if (ttl < new Date()) {
+                valid = false
+                localStorage.removeItem('mage-cache-storage');
+                localStorage.removeItem('mage-cache-timeout');
+                localStorage.removeItem('private_content_version');
+            } else {
+                valid = true
+                data = JSON.parse(localStorage.getItem('mage-cache-storage'));
             }
-        ); 
-        const response = await fetch(request);
+        }
+        if (!valid){
+            const request = new Request(url,
+                {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
+            ); 
+            const response = await fetch(request);
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+            }
+
+            data = await response.json();
+            localStorage.setItem('mage-cache-storage', JSON.stringify(data));
+            localStorage.setItem('mage-cache-timeout', new Date(Date.now() + (3600 * 1000)).toISOString());
+            const version = getCookie('private_content_version');
+            localStorage.setItem('private_content_version', version);
+
+            setCookie(
+                'section_data_ids',
+                JSON.stringify(
+                    Object.keys(data).reduce((ids, key) => {
+                        ids[key] = data[key]['data_id'];
+                        return ids;
+                    }, {})
+                ),
+                false,
+                true
+            );
+        }
+        if(typeof data === null){
+            console.log("Private Data issue");
         }
 
-        const data = await response.json();
         //console.log("Fetched private content:", data);
         updateCartData(data.cart);
         updateCustomer(data.customer);
@@ -103,6 +143,14 @@ async function loadSectionData(sections=defaultSectionData) {
         console.error("Error fetching private content:", error);
         return null;
     }
+}
+
+function getLocalStorage() {
+    if (!window.localStorage) {
+        console.warn('Local Storage is issue');
+        return false;
+    }
+return window.localStorage
 }
 
 function updateCustomer(data) {
@@ -286,9 +334,11 @@ async function addToWishlist(productId) {
 return {
         displayMessages,
         loadSectionData,
+        getLocalStorage,
         updateCartData,
         updateFormKeys,
         addToWishlist,
+        localStorage,
         addToCompare,
         getFormKey,
         isLoaded,
