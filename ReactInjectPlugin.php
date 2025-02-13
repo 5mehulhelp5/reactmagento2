@@ -169,7 +169,7 @@ class ReactInjectPlugin extends Renderer
             }
             // dump($assets);
             foreach ($assets as $key => $asset) {
-                if ($type === 'js') {
+                if ($type === 'js' && $removeAdobeJSJunk) {
                     if (strpos($asset->getUrl(), 'js/react')) {
                         unset($assets[$key]);
                         if ($reactEnabled) {
@@ -218,14 +218,14 @@ class ReactInjectPlugin extends Renderer
             }
             // we need execute it one more time to make scripts the same order
             foreach ($assets as $key => $asset) {
-                if (strpos($asset->getUrl(), 'require')) {
+                if (strpos($asset->getUrl(), 'require') && $removeAdobeJSJunk) {
                     unset($assets[$key]);
                     array_unshift($assets, $asset);
                     // dd($assets);
                 }
             }
 
-            if ($type === 'js') {
+            if ($type === 'js' && $removeAdobeJSJunk) {
                 foreach ($assets as $key => $asset) {
                     if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
                         unset($assets[$key]);

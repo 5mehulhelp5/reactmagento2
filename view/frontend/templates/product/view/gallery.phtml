@@ -35,11 +35,6 @@ function imageToBase64($imagePath)
     return "";
 }
 
-class MyClass {
-    protected function secretMethod() {
-        return "This is a protected method!";
-    }
-}
 
 $helper = $block->getData('imageHelper');
 $mainImageData = $mainImage ?
@@ -51,12 +46,11 @@ $mobileImage = $helper->init($product, 'product_page_image_small')->resize(365, 
 $mobileImageUrl = $mobileImage->getUrl();
 
 if (true) {
-$mobileImagePath = BP . '/pub/' . parse_url( $mobileImageUrl, PHP_URL_PATH);
-$mobileImageUrl = imageToBase64($mobileImagePath);
+    $mobileImagePath = BP . '/pub/' . parse_url($mobileImageUrl, PHP_URL_PATH);
+    $mobileImageUrl = imageToBase64($mobileImagePath);
 }
 //dd($mobileImagePath);
 $gallaryData = $block->getGalleryImagesJson();
-
 
 $images = json_decode($gallaryData, true);
 //dump($images);
@@ -72,7 +66,7 @@ $images = json_decode($gallaryData, true);
                 <picture id="mob-pict">
                     <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
                     <source media="(max-width: 1024px)" srcset="<?=$image['img']?>">
-                    <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" height="700px">
+                    <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" src-full="<?=$image['img']?>" height="700px">
                 </picture>
             <?php endif; ?>
         <?php endforeach; ?>
@@ -81,10 +75,16 @@ $images = json_decode($gallaryData, true);
     <!-- Thumbnail Navigation -->
     <div class="thmb">
         <?php if (count($images) > 1): foreach ($images as $image): ?>
-	            <img src="<?=$image['thumb'];?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>'">
-	        <?php endforeach;endif; ?>
+		            <img src="<?=$image['thumb'];?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>'">
+		        <?php endforeach;endif; ?>
         <?php if (count($images) <= 1) {echo "<style>@media (max-width: 768px) {.gallery {min-height: 255px !important;}</style>";}?>
     </div>
+</div>
+
+<!-- Popup container -->
+<div id="popup" class="image-popup">
+    <button class="close-btn" onclick="closePopup()">X</button>
+    <img id="popup-img" src="" alt="Full Image">
 </div>
 
 <style>
@@ -161,7 +161,80 @@ $images = json_decode($gallaryData, true);
 </style>
 <?php //Other styles?>
 <style>
+         /* Style for the popup background */
+         .image-popup {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8); /* Dark overlay */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 10px;
+        }
 
+        /* Popup content container (keeps image & button together) */
+        .popup-content {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Popup image */
+        .popup-content img {
+            max-width: 90%;
+            max-height: 90vh; /* Prevents image from being too tall */
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+            cursor: zoom-out; /* Zoom out cursor for full image */
+        }
+
+        /* Close button inside the popup */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 30px;
+            font-size: 25px;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background 0.3s;
+        }
+
+        /* Close button hover effect */
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: black;
+        }
+
+        /* Image hover effect (cursor zoom-in) */
+        .m-img img {
+            cursor: zoom-in;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Mobile adjustments */
+        @media screen and (max-width: 600px) {
+            .popup-content img {
+                max-width: 95%;
+                max-height: 80vh;
+            }
+
+            .close-btn {
+                font-size: 20px;
+                top: 5px;
+                right: 45px;
+                padding: 6px 10px;
+            }
+            .image-popup {
+                height: 50%;
+            }
+        }
 </style>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -190,4 +263,30 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+</script>
+
+<script>
+    // Select the image and popup elements
+    const img = document.getElementById('mImg');
+    const popup = document.getElementById('popup');
+    const popupImg = document.getElementById('popup-img');
+
+    // Click event to show full-size image
+    img.addEventListener('click', function () {
+        const fullSrc = img.getAttribute('src-full'); // Get full-size image URL
+        popupImg.src = fullSrc;
+        popup.style.display = 'flex'; // Show popup
+    });
+
+    // Function to close popup
+    function closePopup() {
+        popup.style.display = 'none';
+    }
+
+    // Close popup when clicking outside the image
+    popup.addEventListener('click', function (event) {
+        if (event.target === popup) {
+            closePopup();
+        }
+    });
 </script>

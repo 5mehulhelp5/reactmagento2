@@ -37,4 +37,9 @@ class Template extends MTemplate
         }
         return "";
     }
+
+    public function removeAdobeJSJunk(){  
+        return boolval($this->config->getValue('react_vue_config/junk/remove'));
+    }
+
 }

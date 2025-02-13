@@ -2,6 +2,9 @@
 $product = $this->registry->registry('current_product');
 ?>
 
+<?php 
+if($this->removeAdobeJSJunk()) {
+?>
 <script>
 var mage = (() => {
 var loaded = false;
@@ -477,3 +480,6 @@ mage.onDOM(() => {
     }
 });
 </script>
+<?php 
+} // Remove Adobe JS Junk
+?>

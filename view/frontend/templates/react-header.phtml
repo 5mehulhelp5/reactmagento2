@@ -33,6 +33,9 @@ window.fullAction = "<?=$fullAction?>";
 </script>
 
 
+<?php 
+if($this->removeAdobeJSJunk()) {
+?>
 <script>
 if (typeof require !== "function") {
     window.require = function (modules, callback) {
@@ -43,6 +46,9 @@ if (typeof require.config === "undefined") {
     require.config = function () {};
 }
 </script>
+<?php
+}
+?>
 
 <!--
 <script defer="defer" src="<?=$block->getViewFileUrl('React_React::js/cash.js');?>"> </script>
