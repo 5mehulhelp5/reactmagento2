@@ -35,6 +35,13 @@ function imageToBase64($imagePath)
     return "";
 }
 
+class MyClass
+{
+    protected function secretMethod()
+    {
+        return "This is a protected method!";
+    }
+}
 
 $helper = $block->getData('imageHelper');
 $mainImageData = $mainImage ?
