@@ -5,15 +5,23 @@
             <block class="Magento\Framework\View\Element\Template" template="React_React::react-component.phtml" ifconfig="react_vue_config/react/enable"/>
             <block class="Magento\Framework\View\Element\Template" template="React_React::vue-component.phtml" ifconfig="react_vue_config/vue/enable"/>
         </referenceContainer>
-        <referenceContainer name="footer">
-                <block class="React\React\Template"
-                name="react-luma.footer.block"
-                template="React_React::react-footer.phtml"/>
-        </referenceContainer>
         <referenceContainer name="head.additional">
+            <block class="React\React\Template"
+                   name="react-luma.css.head.block"
+                   before="react-luma.head.block"
+                   template="React_React::react-header-css.phtml"/>
             <block class="React\React\Template"
                    name="react-luma.head.block"
                    template="React_React::react-header.phtml"/>
+        </referenceContainer>
+        <referenceContainer name="footer">
+                <block class="React\React\Template"
+                name="react-luma.css.footer.block"
+                before="react-luma.footer.block"
+                template="React_React::react-footer-css.phtml"/>
+                <block class="React\React\Template"
+                name="react-luma.footer.block"
+                template="React_React::react-footer.phtml"/>
         </referenceContainer>
         <referenceBlock name="navigation.sections">
             <block class="Magento\Framework\View\Element\Template" name="store.link2" group="navigation-sections" template="React_React::topmenu-account.phtml">

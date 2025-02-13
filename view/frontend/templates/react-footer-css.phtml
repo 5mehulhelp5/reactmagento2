@@ -1,0 +1,288 @@
+<?php
+$product = $this->registry->registry('current_product');
+?>
+<!-- CSS Footer Start -->
+<?php /* Only Luma Demo Needs this */ if (!$product): ?>
+<link  rel="stylesheet"  media="print" onload="this.onload=null;this.media='all';"  href="/media/styles.css" >
+<?php endif; ?>
+
+<style>
+.product-info-main .product-add-form {
+                clear: both;
+                padding-top: 0;
+}
+/* Show only the first-level submenu on hover */
+.navigation .level0:hover > .submenu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Ensure deeper levels remain hidden */
+.navigation .level0 .submenu .submenu {
+    display: none;
+}
+/* Mobile */
+@media only screen and (max-width: 768px) {
+ .nav-sections.active {
+        left: 0;
+        z-index: 999;
+    }
+    /* Ensure deeper levels visible on mobile*/
+    .navigation .level0 .submenu .submenu {
+        display: block !important;
+    }
+}
+
+/* Pagination Container */
+.pages {
+    display: inline;
+    text-align: center;
+    margin: 0px 0;
+}
+
+/* Pagination List */
+.pages .items {
+    display: inline-flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.pages .items .label{
+display: none;
+}
+
+/* Pagination Items */
+.pages .items .item {
+    margin: 0;
+}
+
+.pages .items .item a,
+.pages .items .item strong {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #ddd;
+    background: white;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Active Page (Current) */
+.pages .items .item.current strong {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+/* Hover Effect */
+.pages .items .item a:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* Next Button */
+.pages .items .pages-item-next a {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+    border-left: 1px solid #ddd;
+}
+
+/* Hover Effect for Next Button */
+.pages .items .pages-item-next a:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .pages .items {
+        flex-wrap: wrap;
+    }
+    .pages .items .item {
+        margin: 2px;
+    }
+    .pages .items .item a,
+    .pages .items .item strong {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
+
+/* Style for collapsible filter sections */
+.filter-options-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+
+/* Style the title to make it clickable */
+.filter-options-title {
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    padding: 10px;
+    background: #f8f8f8;
+    border-radius: 5px;
+}
+
+/* Add an arrow icon */
+.filter-options-title::after {
+    content: "▼"; /* Down arrow */
+    position: absolute;
+    right: 15px;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+/* Rotate the arrow when active */
+.filter-options-item.active .filter-options-title::after {
+    transform: rotate(180deg);
+}
+
+/* Hide content by default */
+.filter-options-content {
+    display: none;
+    padding: 10px;
+}
+
+/* Show content when active */
+.filter-options-item.active .filter-options-content {
+    display: block;
+}
+
+.filter-current ol.items {
+    margin-top: 20px !important;
+}
+
+.block-actions.filter-actions {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.greet.welcome span.logged-in, .link.wishlist, .action.towishlist, .link.wishlist.login{
+    display:none;
+}
+
+.products-upsell .item.product.product-item {
+    display:inline-block !important;
+}
+
+@media screen and (min-width: 768px) {
+    .navigation .level0.parent > .level-top:after {
+        padding-left: 5px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-size: 12px;
+        line-height: 20px;
+        color: inherit;
+        content: '\e622';
+        font-family: 'luma-icons';
+        vertical-align: middle;
+        display: inline-block;
+        font-weight: normal;
+        overflow: hidden;
+        speak: none;
+        text-align: center;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .navigation .level0.parent>.level-top>.ui-menu-icon:after {
+        display:none;
+    }
+}
+
+/* General Message Styling */
+.message {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0px 4px 10px rgba(0, 128, 0, 0.2);
+    transition: opacity 0.3s ease-in-out;
+    opacity: 1;
+}
+
+.page.messages {
+    max-width: 800px;
+    margin: 0px auto;
+    padding: 10px;
+    display: none;
+}
+
+/* Success Message Styling */
+.message-success {
+    background-color: #e6f9e6;
+    border-left: 6px solid #28a745;
+    color: #155724;
+}
+
+/* Message Text */
+.message-success div {
+    flex: 1;
+}
+
+/* Links Inside Message */
+.message-success a {
+    color: #155724;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Fade-In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.toolbar.toolbar-products .modes{
+    display:none;
+}
+
+.actions-secondary, .product-social-links{
+    display:none !important;
+}
+
+@media only screen and (max-width: 767px) {
+    .block-promo.home-eco {
+        min-height: 450px;
+    }
+    .price-box.price-final_price {
+        margin-bottom: 10px;
+    }
+}
+
+.submenu {
+    display: none;
+    transition: all 0.3s ease-in-out;
+}
+
+.minicart-wrapper .action.showcart .counter.qty.empty {
+    display: none;
+}
+
+.product-item-info button.action.tocart.primary{
+    margin: 0 auto;
+    display: block;
+}
+</style>
+<!-- CSS Footer End -->

@@ -2,12 +2,17 @@
 $isProductPage = $this->registry->registry('current_product') ? true : false;
 $criticalCSSHTML = boolval($this->config->getValue('react_vue_config/css/critical'));
 
-if($criticalCSSHTML || isset($_GET['css-html'])){
+if ($criticalCSSHTML || isset($_GET['css-html'])) {
     $criticalCSSHTML = true;
 }
-if($isProductPage && $criticalCSSHTML) {
-$css = @file_get_contents(BP . '/pub/static/product-critical-m.css');
-?>
+if ($isProductPage && $criticalCSSHTML) {
+    $css = @file_get_contents(BP . '/pub/static/product-critical-m.css');
+    ?>
+<style media="screen and (max-width: 768px)">
+<?=$css?>
+</style>
+<?php
+}?>
 <script>
 <?php
 $product = $this->registry->registry('current_product');
@@ -26,12 +31,8 @@ window.controller = "<?=$controller?>";
 window.action = "<?=$action?>";
 window.fullAction = "<?=$fullAction?>";
 </script>
-<style>
-<?=$css?>
-</style>
-<?
-}
-?>
+
+
 <script>
 if (typeof require !== "function") {
     window.require = function (modules, callback) {
@@ -42,82 +43,7 @@ if (typeof require.config === "undefined") {
     require.config = function () {};
 }
 </script>
-<style>
-    <?=
-    // View files must be added to inline php or compiled every time 
-    "@font-face {
-        font-family: 'luma-icons';
-        src: url('" . $block->getViewFileUrl('fonts/Luma-Icons.woff2') . "') format('woff2'),
-             url('" . $block->getViewFileUrl('fonts/Luma-Icons.woff') . "') format('woff');
-        font-weight: 400;
-        font-style: normal;
-        font-display: block;
-    }";
-    ?>
 
-.swatch-attribute.size .swatch-option {
-    color: black;
-}
-.message.global.demo {
-    color: black;
-}
-    .product-options-wrapper{
-        min-height: 134px;
-    }
-    .product-info-main .product-info-stock-sku {
-    display: inline-block;
-    float: right;
-    padding-bottom: 10px;
-    padding-left: 10%;
-    text-align: right;
-    vertical-align: top;
-}
-/* Desck */
-@media only screen and (min-width: 768px) {
-form.minisearch .control {
-    display: block;
-}
-.product.info.detailed{
-        clear: both;
-}
-}
-/* Mobile */
-@media only screen and (max-width: 768px) {
-form.minisearch .control {
-    display: none;
-}
-.product-info-main {
-    margin-top: 25px;
-}
-}
-
-.product-item-name {
-    margin: 10px 0;
-}
-a.product-item-link {
-    font-size: 16px;
-}
-
-.swatch-option.text.selected {
-    box-shadow: 0 0 10px 4px #007bff;
-    border: 2px solid rgba(255, 215, 0, 1);
-    transition: box-shadow 0.3s ease-in-out, border 0.3s ease-in-out;
-}
-
-.swatch-option.color.selected {
-    box-shadow: 0 0 10px 4px #cbff00;
-    border: 2px solid rgba(255, 215, 0, 1);
-    transition: box-shadow 0.3s ease-in-out, border 0.3s ease-in-out;
-}
-
-.block-search input {
-    position: unset;
-}
-
-.form-create-account .action.submit.primary, a.action.create.primary{
-    display: none;
-}
-</style>
 <!--
 <script defer="defer" src="<?=$block->getViewFileUrl('React_React::js/cash.js');?>"> </script>
 -->

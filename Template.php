@@ -26,4 +26,15 @@ class Template extends MTemplate
         $this->config = $config;
         parent::__construct($context, $data);
     }
+
+        // Function to encode an image as Base64
+    public function imageToBase64($imagePath) {
+        if (file_exists($imagePath)) {
+            $imageData = file_get_contents($imagePath);
+            $base64 = base64_encode($imageData);
+            $mimeType = mime_content_type($imagePath); // Get MIME type
+            return "data:$mimeType;base64,$base64";
+        }
+        return "";
+    }
 }

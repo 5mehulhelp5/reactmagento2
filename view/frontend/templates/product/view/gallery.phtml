@@ -23,15 +23,40 @@ if (!empty($images) && empty($mainImage)) {
     $mainImage = $block->getGalleryImages()->getFirstItem();
 }
 
+// Function to encode an image as Base64
+function imageToBase64($imagePath)
+{
+    if (file_exists($imagePath)) {
+        $imageData = file_get_contents($imagePath);
+        $base64 = base64_encode($imageData);
+        $mimeType = mime_content_type($imagePath); // Get MIME type
+        return "data:$mimeType;base64,$base64";
+    }
+    return "";
+}
+
+class MyClass {
+    protected function secretMethod() {
+        return "This is a protected method!";
+    }
+}
+
 $helper = $block->getData('imageHelper');
 $mainImageData = $mainImage ?
 $mainImage->getData('medium_image_url') :
 $helper->getDefaultPlaceholderUrl('image');
 $imageWidth = $block->getImageAttribute('product_page_image_medium', 'width');
 $imageHeight = $block->getImageAttribute('product_page_image_medium', 'height');
-$mobileImageUrl = $helper->init($product, 'product_page_image_small')->resize(365, 260)->keepAspectRatio(true)->setQuality(85)->getUrl();
+$mobileImage = $helper->init($product, 'product_page_image_small')->resize(365, 260)->keepAspectRatio(true)->setQuality(85);
+$mobileImageUrl = $mobileImage->getUrl();
 
+if (true) {
+$mobileImagePath = BP . '/pub/' . parse_url( $mobileImageUrl, PHP_URL_PATH);
+$mobileImageUrl = imageToBase64($mobileImagePath);
+}
+//dd($mobileImagePath);
 $gallaryData = $block->getGalleryImagesJson();
+
 
 $images = json_decode($gallaryData, true);
 //dump($images);
@@ -55,10 +80,10 @@ $images = json_decode($gallaryData, true);
 
     <!-- Thumbnail Navigation -->
     <div class="thmb">
-        <?php if(count($images) > 1): foreach ($images as $image): ?>
-            <img src="<?=$image['thumb'];?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>'">
-        <?php endforeach;endif; ?>
-        <?php if(count($images) <= 1) {echo "<style>@media (max-width: 768px) {.gallery {min-height: 255px !important;}</style>";} ?>
+        <?php if (count($images) > 1): foreach ($images as $image): ?>
+	            <img src="<?=$image['thumb'];?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>'">
+	        <?php endforeach;endif; ?>
+        <?php if (count($images) <= 1) {echo "<style>@media (max-width: 768px) {.gallery {min-height: 255px !important;}</style>";}?>
     </div>
 </div>
 
