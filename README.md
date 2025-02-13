@@ -1,8 +1,13 @@
-# Do you have questions about integrating ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
-React Magento 2 implementation. This module explains how to add and use ReactJS or any other framework micro-frontend UI Components with Magento 2 and forget about Knockout/JQuery Magento 2 UI without migration to a new theme(Works with existing theme and designs). Checkout, admin, customer account, and any other part of your store can work using legacy Magento 2 JS implementation
+React-Luma Module is a Faster and Free Open-Source Hyva Alternative. Actually, you don’t even need to change the Theme. It works as a composer module to improve your existing theme without re-platforming to Hyva, or it can be used to improve Hyva.
+
+React-Luma is 20% faster than any M2 front-end, including Hyva, today!
+
+100% Vanilla.JS(no framework was used to improve performance) and default magento CSS without LESS compilation. However, it can be easily extended by any JS (ReactJS, VueJS) or CSS(Tilewind) library of your choice.
 
 <img width="781" alt="image" src="https://github.com/user-attachments/assets/adad25f3-d394-4b00-8661-52e3165f6af7" />
 
+# Do you have questions about integrating ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
+React Magento 2 implementation. This module explains how to add and use ReactJS or any other framework micro-frontend UI Components with Magento 2 and forget about Knockout/JQuery Magento 2 UI without migration to a new theme(Works with existing theme and designs). Checkout, admin, customer account, and any other part of your store can work using legacy Magento 2 JS implementation
 
 ![React + Magento 2](https://github.com/Genaker/reactmagento2/blob/master/KnockoutMagento2React.png)
 
