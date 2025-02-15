@@ -14,7 +14,10 @@ class RemoveMagentoInitScripts
         'cms_index_index',
         'cms_page_view',
         'catalog_product_view',
-        'catalogsearch_result_index'
+        'catalogsearch_result_index',
+        'cms_noroute_index',
+        'customer_account_login',
+        'customer_account_create',
     ];
 
     /**

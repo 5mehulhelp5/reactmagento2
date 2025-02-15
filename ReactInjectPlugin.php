@@ -72,9 +72,11 @@ class ReactInjectPlugin extends Renderer
         $removeCSSjunk = boolval($this->config->getValue('react_vue_config/css/remove'));
         $criticalCSSHTML = boolval($this->config->getValue('react_vue_config/css/critical'));
 
-        if (isset($_GET['css-junk'])) {
-            // Css test mode
+        if (isset($_GET['css-react']) && $_GET['css-react'] === "false") {
             $removeCSSjunk = false;
+        }
+        if (isset($_GET['css-react']) && $_GET['css-react'] === "true") {
+            $removeCSSjunk = true;
         }
 
         $area = $this->state->getAreaCode();

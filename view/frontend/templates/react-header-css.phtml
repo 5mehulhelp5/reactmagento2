@@ -1,5 +1,62 @@
 <!-- CSS Header Start -->
 <style>
+@media (min-width: 768px) {
+.nav-toggle {
+    display: none !important;
+}
+.block-search input {
+    margin: 0 !important;
+    padding-right: 35px !important;
+    position: static !important;
+}
+.header.panel>.header.links {
+    display: block;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none none !important;
+    float: right !important;
+    margin-left: auto !important;
+}
+form.minisearch .control  {
+    border-top: 0 !important;
+}
+.page-header {
+        border: 0 !important;
+        margin-bottom: 0 !important;
+}
+
+.header.content {
+        padding: 30px 20px 0 !important;
+    }
+
+.block-search .action.search:before {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+    line-height: 32px;
+    color: #757575;
+    content: '\e615';
+    font-family: 'luma-icons';
+    margin: 0;
+    vertical-align: top;
+    display: inline-block;
+    font-weight: normal;
+    overflow: hidden;
+    speak: none;
+    text-align: center;
+}
+.block-search .action.search {
+    display: block !important;
+}
+.minicart-wrapper,.block.block-search{
+    margin-top:10px;
+}
+.logo {
+        margin: -8px auto 25px 0 !important;
+}
+}
+</style>
+<style>
     <?=
     // View files must be added to inline php or compiled every time 
     "@font-face {
@@ -11,6 +68,18 @@
         font-display: block;
     }";
     ?>
+
+body,html {
+        height: 100%
+}
+
+.message.global.demo .content{
+    max-height: 42px !important;
+}
+
+.header.content {
+    max-height: 96px;
+}
 
 .swatch-attribute.size .swatch-option {
     color: black;

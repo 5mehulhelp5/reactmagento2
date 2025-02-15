@@ -27,8 +27,9 @@ class Template extends MTemplate
         parent::__construct($context, $data);
     }
 
-        // Function to encode an image as Base64
-    public function imageToBase64($imagePath) {
+    // Function to encode an image as Base64
+    public function imageToBase64($imagePath)
+    {
         if (file_exists($imagePath)) {
             $imageData = file_get_contents($imagePath);
             $base64 = base64_encode($imageData);
@@ -38,8 +39,24 @@ class Template extends MTemplate
         return "";
     }
 
-    public function removeAdobeJSJunk(){  
+    public function removeAdobeJSJunk()
+    {
         return boolval($this->config->getValue('react_vue_config/junk/remove'));
+    }
+
+    public function removeAdobeCSSJunk()
+    {
+        if (!isset($_GET['css-react'])) {
+            return $removeCSSjunk = boolval($this->config->getValue('react_vue_config/junk/remove'));
+        }
+
+        if (isset($_GET['css-react']) && $_GET['css-react'] === "false") {
+            $removeCSSjunk = false;
+        }
+        if (isset($_GET['css-react']) && $_GET['css-react'] === "true") {
+            $removeCSSjunk = true;
+        }
+        return $removeCSSjunk;
     }
 
 }

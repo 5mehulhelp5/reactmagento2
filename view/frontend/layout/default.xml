@@ -7,19 +7,19 @@
         </referenceContainer>
         <referenceContainer name="head.additional">
             <block class="React\React\Template"
-                   name="react-luma.css.head.block"
-                   before="react-luma.head.block"
-                   template="React_React::react-header-css.phtml"/>
-            <block class="React\React\Template"
                    name="react-luma.head.block"
                    template="React_React::react-header.phtml"/>
+            <block class="React\React\Template"
+                   name="react-luma.css.head.block"
+                   after="react-luma.head.block"
+                   template="React_React::react-header-css.phtml"/>
         </referenceContainer>
         <referenceContainer name="footer">
-                <block class="React\React\Template"
+            <block class="React\React\Template"
                 name="react-luma.css.footer.block"
                 before="react-luma.footer.block"
                 template="React_React::react-footer-css.phtml"/>
-                <block class="React\React\Template"
+            <block class="React\React\Template"
                 name="react-luma.footer.block"
                 template="React_React::react-footer.phtml"/>
         </referenceContainer>
