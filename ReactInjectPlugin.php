@@ -79,6 +79,13 @@ class ReactInjectPlugin extends Renderer
             $removeCSSjunk = true;
         }
 
+        if (isset($_GET['js-junk']) && $_GET['js-junk'] === "false") {
+            $removeAdobeJSJunk = false;
+        }
+        if (isset($_GET['js-junk']) && $_GET['js-junk'] === "true") {
+            $removeAdobeJSJunk = true;
+        }
+
         $area = $this->state->getAreaCode();
         $pageFilter = ['checkout', 'customer'];
 
