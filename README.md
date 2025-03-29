@@ -1,4 +1,4 @@
-React-Luma Module is a Faster and Free Open-Source Hyva Alternative. Actually, you don’t even need to change the Theme. It works as a composer module to improve your existing theme without re-platforming to Hyva, or it can be used to improve Hyva.
+The React-Luma Module is a Faster and Free Open-Source Magento 2 Luma or another Theme Optimiser and Hyva Theme Alternative. Actually, you don’t even need to change the Theme. It works as a composer module to improve your existing theme without re-platforming to Hyva, or it can be used to improve Hyva.
 
 React-Luma is 20% faster than any M2 front-end, including Hyva, today!
 
@@ -6,7 +6,7 @@ React-Luma is 20% faster than any M2 front-end, including Hyva, today!
 
 <img width="781" alt="image" src="https://github.com/user-attachments/assets/adad25f3-d394-4b00-8661-52e3165f6af7" />
 
-# Do you have questions about integrating ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
+# Have you questions about integrating ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
 React Magento 2 implementation. This module explains how to add and use ReactJS or any other framework micro-frontend UI Components with Magento 2 and forget about Knockout/JQuery Magento 2 UI without migration to a new theme(Works with existing theme and designs). Checkout, admin, customer account, and any other part of your store can work using legacy Magento 2 JS implementation
 
 ![React + Magento 2](https://github.com/Genaker/reactmagento2/blob/master/KnockoutMagento2React.png)
@@ -26,8 +26,8 @@ React Magento 2 implementation. This module explains how to add and use ReactJS 
 Repo is here: https://github.com/Genaker/Luma-React-PWA-Magento-Theme
 
 # About the Magento 2 React implementation module 
-You can add any modern library to extend magento fetire. React-Luma has basic magento fetures implemented using natibe JS without dependencies 
-It is not PWA or headless implementation which is impossible to use with an existing website. Also, Single Page Application (SPA) PWA Magento 2 implementations have issues with Magento 2 API performance - too slow. This implementation is High-Performance integration with magento2 (with Magento 1 also easy to use) it uses inline JSON directly from the page. The same approach is used in Magento 2 backend and frontend checkout, color swatches by default. Also can use Ajax HTTP call to fetch data (not the best solution Magento API is slow and will increase the load on your backend server). Or you can use my future project "Microservices Magento" to fetch data.
+You can add any modern library to extend the magento feature. React-Luma has basic magento features implemented using native JS without dependencie.s 
+It is not a PWA or headless implementation, which is impossible to use with an existing website. Also, Single Page Application (SPA) PWA Magento 2 implementations have issues with Magento 2 API performance - too slow. This implementation is High-Performance integration with magento2 (with Magento 1 also easy to use) it uses inline JSON directly from the page. The same approach is used in Magento 2 backend and frontend checkout, color swatches by default. Also can use Ajax HTTP call to fetch data (not the best solution Magento API is slow and will increase the load on your backend server). You can also use my future project, "Microservices Magento," to fetch data.
 
 
 # CSS improvements
@@ -131,9 +131,9 @@ Add a script tag to your page pointed at the livereload server
 ```
 <script src="http://localhost:35729/livereload.js"></script>
 ```
-For development purpose better disable browser caching (https://www.technipages.com/google-chrome-how-to-completely-disable-cache)
+For development purposes, better disable browser caching (https://www.technipages.com/google-chrome-how-to-completely-disable-cache)
 
-Disable react bundle caching for development purpose using Nginx (not tested yet):
+Disable react bundle caching for development purposes using Nginx (not tested yet):
 
 ```
 location ~ index_bundle\.js {
