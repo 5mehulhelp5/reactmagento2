@@ -41,6 +41,12 @@ class Template extends MTemplate
 
     public function removeAdobeJSJunk()
     {
+        if (isset($_GET['js-junk']) && $_GET['js-junk'] === "false") {
+            return $removeAdobeJSJunk = false;
+        }
+        if (isset($_GET['js-junk']) && $_GET['js-junk'] === "true") {
+            return $removeAdobeJSJunk = true;
+        }
         return boolval($this->config->getValue('react_vue_config/junk/remove'));
     }
 
