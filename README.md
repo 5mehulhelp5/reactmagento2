@@ -9,6 +9,12 @@ React-Luma is 20% faster than any M2 front-end, including Hyva, today!
 # Have you questions about integrating ReactJS or VueJS with Magento 2 frontend? This Magento module will help you
 React Magento 2 implementation. This module explains how to add and use ReactJS or any other framework micro-frontend UI Components with Magento 2 and forget about Knockout/JQuery Magento 2 UI without migration to a new theme(Works with existing theme and designs). Checkout, admin, customer account, and any other part of your store can work using legacy Magento 2 JS implementation
 
+# No Magento CSS and Magento JS
+Enable only CSS Junk settings and 
+```
+php bin/magento config:set dev/js/move_script_to_bottom 1
+```
+
 ![React + Magento 2](https://github.com/Genaker/reactmagento2/blob/master/KnockoutMagento2React.png)
 
 # Updates:
