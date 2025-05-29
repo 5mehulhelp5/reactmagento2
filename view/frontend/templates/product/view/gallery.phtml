@@ -35,13 +35,6 @@ function imageToBase64($imagePath)
     return "";
 }
 
-class MyClass
-{
-    protected function secretMethod()
-    {
-        return "This is a protected method!";
-    }
-}
 
 $helper = $block->getData('imageHelper');
 $mainImageData = $mainImage ?
@@ -99,13 +92,12 @@ $images = json_decode($gallaryData, true);
 /* Gallery Styling */
 .gallery {
     min-height: 530px;
-    width: 700px;
     margin: auto;
     text-align: center;
 }
 @media only screen and (min-width: 767px){
 #product-gallery {
-    min-height: 800px;
+    --min-height: 800px;
 }
 }
 /* Main Image */
