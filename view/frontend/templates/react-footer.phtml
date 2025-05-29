@@ -1,5 +1,8 @@
 <?php
 $inlineJs = false;
+if(isset($_GET['js-inline'])) {
+    $inlineJs = true;
+}
 ?>
 <!-- core js -->
 <?php 
@@ -9,13 +12,8 @@ if($this->removeAdobeJSJunk()) {
 <script defer src="<?php echo $block->getViewFileUrl('React_React::js/react-core.js'); ?>"></script>
 <?php
     } else {
-        echo getInlineJs();
+        echo $this->getInlineJs('react-core.js');
     }
-}
-
-function getInlineJs() {
-    $jsContent = file_get_contents(__DIR__ . '/js/react-core.js');
-    return '<script>' . $jsContent . '</script>';
 }
 ?>
 <!-- inline js -->
