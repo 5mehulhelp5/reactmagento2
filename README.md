@@ -73,6 +73,8 @@ Magento 2 uses a modern Symphony approach but it still has a lot of legacy code.
 ```
 composer require genaker/react-luma
 ```
+# Deploy static
+React Luma doesn't use native magento Less generated CSS. Instead you need copy pre-optimised style from module *pub/static* content(CSS) to the root *pub/static*
 
 # Disable dafault Adobe's broken Magento 2 KnockoutJS UI Components from the frontend
 
