@@ -49,3 +49,102 @@ $product = $block->getProduct()
     */
     ?>
 <?php endif; ?>
+
+<?php
+
+//TODO: move to the reusable method
+
+$optionToImage = [];
+$imageIndex = $swatchData["jsonConfig"]['index'];
+foreach ($imageIndex as $imageId => $options) {
+    foreach ($options as $option) {
+        $optionToImage[$option] = $imageId;
+    }
+}
+
+
+$configurableGallary = [];
+
+
+foreach ($configurableImages as $productId => $images) {
+    $galleryHtml = '<div class="gallery" id="product-gallery">
+        <div class="m-img" id="m-img">';
+
+    // Loop through images to find the main image
+    foreach ($images as $image) {
+        if ($image['isMain']) {
+            $galleryHtml .= '<img src="' . $image['img'] . '" src-full="' . $image['full'] . '" alt="' . htmlspecialchars($image['caption']) . '" id="mImg" width="700px" height="700px">';
+        }
+    }
+
+    $galleryHtml .= '</div>
+        <div class="thmb">';
+
+    // Loop through images to generate thumbnails
+    foreach ($images as $image) {
+        $galleryHtml .= '<img src="' . $image['thumb'] . '"
+        loading="lazy"
+        src-full="' . $image['full'] . '"
+        alt="' . htmlspecialchars($image['caption']) . '"
+        class="thumb"
+        onclick="
+            document.getElementById(\'mImg\').src=\'' . $image['img'] . '\';
+            document.getElementById(\'mImg\').setAttribute(\'src-full\', \'' . $image['full'] . '\');
+        ">';
+    }
+
+    $galleryHtml .= '</div>
+    </div>';
+
+    // Store the generated HTML in the array
+    $configurableGallery[$productId] = $galleryHtml;
+}
+
+?>
+<script>
+var confGallery = <?=json_encode(@$configurableGallery)?>;
+</script>
+
+<div class="swatch-opt" data-role="swatch-options"></div>
+
+<a href="<?=$product->getProductUrl()?>">
+<div class="product-options-wrapper" id="product-options-wrapper">
+        <div class="fieldset" tabindex="0">
+            <div class="swatch-opt" data-role="swatch-options" data-rendered="true">
+
+                <?php if (!empty($swatchConfig['attributes'])): ?>
+                    <?php foreach ($swatchConfig['attributes'] as $attributeId => $swatchData): ?>
+                        <div class="swatch-attribute <?=$escaper->escapeHtmlAttr($swatchData['code'])?>"
+                             data-attribute-code="<?=$escaper->escapeHtmlAttr($swatchData['code'])?>"
+                             data-attribute-id="<?=$escaper->escapeHtmlAttr($attributeId)?>">
+
+                            <span id="option-label-<?=$escaper->escapeHtmlAttr($swatchData['code'])?>-<?=$escaper->escapeHtmlAttr($attributeId)?>"
+                                  class="swatch-attribute-label"><?=$escaper->escapeHtml($swatchData['label'])?></span>
+                            <span class="swatch-attribute-selected-option"></span>
+
+                            <div class="swatch-attribute-options clearfix">
+                                <?php foreach ($swatchAttributes[$attributeId] as $optionId => $optionData): ?>
+                                    <?php if (!is_array($optionData) || !isset($optionData['type'])) {
+    continue;
+}
+?>
+
+                                    <div class="swatch-option <?=$optionData['type'] == 1 ? 'color' : 'text'?>"
+                                         data-option-type="<?=$escaper->escapeHtmlAttr($optionData['type'])?>"
+                                         data-option-id="<?=$escaper->escapeHtmlAttr($optionId)?>"
+                                         data-option-gallery-id="<?=$escaper->escapeHtmlAttr($optionToImage[$optionId])?>"
+                                         data-option-label="<?=$escaper->escapeHtmlAttr($optionData['label'] ?? '')?>"
+                                         style="<?=$optionData['type'] == 1 ? 'background:' . $escaper->escapeHtmlAttr($optionData['value']) . ' no-repeat center;' : ''?>">
+                                        <?=$optionData['type'] == 0 ? $escaper->escapeHtml($optionData['value']) : ''?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <input class="swatch-input super-attribute-select" name="super_attribute[<?=$attributeId?>]" type="text" value="" data-selector="super_attribute[<?=$attributeId?>]" data-validate="{required: true}" aria-required="true">
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</a>
+
