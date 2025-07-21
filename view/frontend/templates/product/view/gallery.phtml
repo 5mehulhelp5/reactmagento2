@@ -42,10 +42,10 @@ $mainImage->getData('medium_image_url') :
 $helper->getDefaultPlaceholderUrl('image');
 $imageWidth = $block->getImageAttribute('product_page_image_medium', 'width');
 $imageHeight = $block->getImageAttribute('product_page_image_medium', 'height');
-$mobileImage = $helper->init($product, 'product_page_image_small')->resize(365, 260)->keepAspectRatio(true)->setQuality(85);
+$mobileImage = $helper->init($product, 'product_page_image_small')->resize(365, 260)->keepAspectRatio(true)->setQuality(90);
 $mobileImageUrl = $mobileImage->getUrl();
-
-if (false && true) {
+$base64Image = true; //wins 0.1-0.2s to LCP
+if ($base64Image) {
     $mobileImagePath = BP . '/pub/' . parse_url($mobileImageUrl, PHP_URL_PATH);
     $mobileImageUrl = imageToBase64($mobileImagePath);
 }
@@ -69,7 +69,7 @@ $images = json_decode($gallaryData, true);
                         <source media="(max-width: 1024px)" srcset="<?=$image['img']?>">
                         <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" src-full="<?=$image['img']?>" height="700px" fetchpriority="high">
                     </picture>
-                <?php if (true /*preload mobile hero images with headers*/ && !headers_sent()): header("Link: <".$mobileImageUrl.">; rel=preload; as=image; fetchpriority=high"); endif; ?>
+                <?php if (!$base64Image /*preload mobile hero images with headers*/ && !headers_sent()): header("Link: <".$mobileImageUrl.">; rel=preload; as=image; fetchpriority=high"); endif; ?>
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>
@@ -260,7 +260,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
-
 </script>
 
 <script>
