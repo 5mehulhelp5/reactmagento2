@@ -45,15 +45,15 @@ $imageHeight = $block->getImageAttribute('product_page_image_medium', 'height');
 $mobileImage = $helper->init($product, 'product_page_image_small')->resize(365, 260)->keepAspectRatio(true)->setQuality(85);
 $mobileImageUrl = $mobileImage->getUrl();
 
-if (true) {
+if (false && true) {
     $mobileImagePath = BP . '/pub/' . parse_url($mobileImageUrl, PHP_URL_PATH);
     $mobileImageUrl = imageToBase64($mobileImagePath);
 }
-//dd($mobileImagePath);
+
 $gallaryData = $block->getGalleryImagesJson();
 
 $images = json_decode($gallaryData, true);
-//dump($images);
+
 ?>
 
 <!-- Gallery Container -->
@@ -67,8 +67,9 @@ $images = json_decode($gallaryData, true);
                     <picture id="mob-pict">
                         <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
                         <source media="(max-width: 1024px)" srcset="<?=$image['img']?>">
-                        <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" src-full="<?=$image['img']?>" height="700px">
+                        <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" src-full="<?=$image['img']?>" height="700px" fetchpriority="high">
                     </picture>
+                <?php if (true /*preload mobile hero images with headers*/ && !headers_sent()): header("Link: <".$mobileImageUrl.">; rel=preload; as=image; fetchpriority=high"); endif; ?>
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>
@@ -76,7 +77,7 @@ $images = json_decode($gallaryData, true);
     <!-- Thumbnail Navigation -->
     <div class="thmb">
         <?php if (count($images) > 1): foreach ($images as $image): ?>
-			            <img src="<?=$image['thumb'];?>" src-full="<?=$image['img']?>" loading="lazy" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>';document.getElementById('mImg').setAttribute('src-full','<?=$image['full'];?>');">
+			            <img src="<?=$image['thumb'];?>" src-full="<?=$image['img']?>" loading="lazy" fetchpriority="low" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>';document.getElementById('mImg').setAttribute('src-full','<?=$image['full'];?>');">
 			        <?php endforeach;endif; ?>
         <?php if (count($images) <= 1) {echo "<style>@media (max-width: 768px) {.gallery {min-height: 255px !important;}</style>";}?>
     </div>
