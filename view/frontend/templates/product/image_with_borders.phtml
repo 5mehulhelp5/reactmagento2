@@ -24,8 +24,8 @@ $_GET['cat_image']++;
             <?php endforeach; ?>
             src="<?=$escaper->escapeUrl($block->getImageUrl())?>"
             <?php if ($_GET['cat_image'] > 1) { ?>
-        
             loading="lazy"
+            fetchpriority="low"
             <?php }?>
             width="<?=$escaper->escapeHtmlAttr($block->getWidth())?>"
             height="<?=$escaper->escapeHtmlAttr($block->getHeight())?>"
