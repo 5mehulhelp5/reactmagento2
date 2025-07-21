@@ -23,7 +23,7 @@ $_GET['cat_image']++;
                 <?=$escaper->escapeHtmlAttr($name)?>="<?=$escaper->escapeHtml($value)?>"
             <?php endforeach; ?>
             src="<?=$escaper->escapeUrl($block->getImageUrl())?>"
-            <?php if ($_GET['cat_image'] > 2) { ?>
+            <?php if ($_GET['cat_image'] > 1) { ?>
         
             loading="lazy"
             <?php }?>
