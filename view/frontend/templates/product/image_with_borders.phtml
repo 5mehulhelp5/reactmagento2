@@ -23,7 +23,7 @@ $catImage++;
 $request->setParam('cat_image_counter', $catImage);
 
 $isProductPage = ($request->getFullActionName() === 'catalog_product_view');
-
+$isHomePage = ($request->getFullActionName() === 'cms_index_index');
 ?>
 <span class="product-image-container product-image-container-<?=/* @noEscape */$block->getProductId()?>">
     <span class="product-image-wrapper">
@@ -32,7 +32,7 @@ $isProductPage = ($request->getFullActionName() === 'catalog_product_view');
                 <?=$escaper->escapeHtmlAttr($name)?>="<?=$escaper->escapeHtml($value)?>"
             <?php endforeach; ?>
             src="<?=$escaper->escapeUrl($block->getImageUrl())?>"
-            <?php if ($catImage > 1 || $isProductPage) { ?>
+            <?php if ($catImage > 1 || $isProductPage || $isHomePage) { ?>
             loading="lazy"
             fetchpriority="low"
             <?php } else { ?>
