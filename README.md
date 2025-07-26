@@ -6,6 +6,15 @@ React-Luma is 20% faster than any M2 front-end, including Hyva, today!
 
 <img width="781" alt="image" src="https://github.com/user-attachments/assets/adad25f3-d394-4b00-8661-52e3165f6af7" />
 
+## CSS Deployment Guide
+
+**Known issue**: The CSS files are not loading correctly on the frontend. The layout is broken due to missing or non-deployed static CSS assets.
+It is because not deployed React-Luma optimised CSS. 
+If specific CSS files from the extension are missing, manually copy them:
+‘’’
+cp -R {path to extension}/pub/static/* pub/static/
+‘’’
+
 # Video overview of the React-Luma
 
 Video is here -> https://www.youtube.com/watch?v=TJPNAgDCkWk
