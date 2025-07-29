@@ -10,6 +10,7 @@ use Magento\Framework\View\Page\Config;
 use Magento\Framework\View\Page\Config\Metadata\MsApplicationTileImage;
 use Magento\Framework\View\Page\Config\Renderer;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\App\ObjectManager;
 
 /**
  * Page config Renderer model Plugin
@@ -21,7 +22,7 @@ class ReactInjectPlugin extends Renderer
 
     // Allowed optimisations for
     public $actionFilter = [
-       'catalog_category_view',
+        'catalog_category_view',
         'cms_index_index',
         'cms_page_view',
         'catalog_product_view',
@@ -30,6 +31,12 @@ class ReactInjectPlugin extends Renderer
         'customer_account_login',
         'customer_account_create'
     ];
+
+    public $staticVersion = 0;
+    private $apcuEnabled = null;
+    private $assetVariables = [];
+    private $objectManager = null;
+    private $configuration = [];
 
     /**
      * @param Config $pageConfig
@@ -53,6 +60,7 @@ class ReactInjectPlugin extends Renderer
         private StoreManagerInterface $store
     ) {
         parent::__construct($pageConfig, $assetMergeService, $urlBuilder, $escaper, $string, $logger, $msApplicationTileImage);
+        $this->configuration = $this->getConfigurationSettings();
     }
 
     /**
@@ -66,258 +74,455 @@ class ReactInjectPlugin extends Renderer
         @header("x-built-with: Ract-Luma", false);
         $startTime = microtime(true);
 
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-
-        $reactEnabled = boolval($this->config->getValue('react_vue_config/react/enable'));
-        $vueEnabled = boolval($this->config->getValue('react_vue_config/vue/enable'));
-        /* remove default Magento Junky JS */
-        $removeAdobeJSJunk = boolval($this->config->getValue('react_vue_config/junk/remove'));
-        $removeCSSjunk = boolval($this->config->getValue('react_vue_config/css/remove'));
-        $criticalCSSHTML = boolval($this->config->getValue('react_vue_config/css/critical'));
-
-        if (isset($_GET['css-react']) && $_GET['css-react'] === "false") {
-            $removeCSSjunk = false;
-        }
-        if (isset($_GET['css-react']) && $_GET['css-react'] === "true") {
-            $removeCSSjunk = true;
-        }
-
-        if (isset($_GET['js-junk']) && $_GET['js-junk'] === "false") {
-            $removeAdobeJSJunk = false;
-        }
-        if (isset($_GET['js-junk']) && $_GET['js-junk'] === "true") {
-            $removeAdobeJSJunk = true;
-        }
-
-        $area = $this->state->getAreaCode();
-        $pageFilter = ['checkout', 'customer'];
-
-        $request = $objectManager->get(\Magento\Framework\App\Request\Http::class);
-        $actionName = $request->getFullActionName();
-        @header("Action-Name: $actionName");
-        $requestURL = $_SERVER['REQUEST_URI'];
-        $removeProtection = boolval(boolval(strpos($requestURL, 'checkout')) || boolval(strpos($requestURL, 'customer')) || $area === 'adminhtml');
-        @header("React-Protection: $removeProtection");
-        $block = $objectManager->get(\Magento\Framework\View\Element\Template::class);
+        $this->objectManager = ObjectManager::getInstance();
+        
+        // Get request context
+        $requestContext = $this->getRequestContext();
+        
+        // Process assets
         $assets = $this->processMerge($group->getAll(), $group);
         $attributes = $this->getGroupAttributes($group);
         $type = $group->getProperties()['content_type'];
-        $result = '';
-        $template = '';
-        $assetOptimized = false;
-        $assetOptimizedLarge = false;
-        $assetProductOptimized = false;
-        $assetCategoryOptimized = false;
-        $assetNotOptimisedMobile = false;
-        $optimisedProductCSSFileCriticalPath = false;
-        $optimisedCategoryCSSFileCriticalPath = false;
-
-        $removeController = in_array($actionName, $this->actionFilter);
-        $isProduct = in_array($actionName, ['catalog_product_view']);
-        $isCategory = in_array($actionName, ['catalog_category_view', 'catalogsearch_result_index']);
-
+        
+        // Initialize asset variables
+        $this->initializeAssetVariables();
+        
+        // Determine page types
+        $pageTypes = $this->determinePageTypes($requestContext['actionName']);
+        
         try {
-            /** @var $asset \Magento\Framework\View\Asset\AssetInterface */
-            // Changes Start
-            $baseURL = $this->store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
-            if ($removeCSSjunk && $type === 'css') {
-                foreach ($assets as $key => $asset) {
-                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
-                        // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-m.css
-                        $assetNotOptimisedMobile = $asset->getUrl();
-                        $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
-                        $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
-
-                        $optimisedProductCSSFileUrl = $baseURL . 'product-styles-m.css';
-                        $optimisedProductCSSFileCriticalUrl = $baseURL . 'product-critical-m.css';
-                        $optimisedProductCSSFileCriticalPath = BP . '/pub/static/product-critical-m.css';
-                        $optimisedProductCSSFilePath = BP . '/pub/static/product-styles-m.css';
-
-                        $optimisedCategoryCSSFileUrl = $baseURL . 'category-styles-m.css';
-                        $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
-                        $optimisedCategoryCSSFileCriticalUrl = $baseURL . 'category-critical-m.css';
-                        $optimisedCategoryCSSFileCriticalPath = BP . '/pub/static/category-critical-m.css';
-
-                        if (file_exists($optimisedCSSFilePath)) {
-                            // echo $optimisedCSSFileUrl;
-                            $assetOptimized = $optimisedCSSFileUrl;
-                            unset($assets[$key]);
-                        }
-                        if (file_exists($optimisedProductCSSFilePath) && $isProduct) {
-                            // echo $optimisedCSSFileUrl;
-                            $assetProductOptimized = $optimisedProductCSSFileUrl;
-                            unset($assets[$key]);
-                        }
-                        if (file_exists($optimisedCategoryCSSFilePath) && $isCategory) {
-                            // echo $optimisedCSSFileUrl;
-                            $assetCategoryOptimized = $optimisedCategoryCSSFileUrl;
-                            unset($assets[$key]);
-                        }
-
-                    }
-                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'styles-l')) {
-                        // http://**/static/version1642788857/frontend/Magento/luma/en_US/css/styles-l.css
-                        $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.css';
-                        $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
-                        $assetNotOptimisedLarge = $asset->getUrl();
-                        if (file_exists($optimisedCSSFilePathLarge)) {
-                            // echo $optimisedCSSFileUrl;
-                            $assetOptimizedLarge = $optimisedCSSFileUrlLarge;
-                            unset($assets[$key]);
-                        } else {
-                            @header('Optimised-CSS: false');
-                        }
-                    }
-                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'calendar')) {
-                        unset($assets[$key]);
-                    }
-                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'gallery')) {
-                        unset($assets[$key]);
-                    }
-                    if (in_array($actionName, $this->actionFilter) && strpos($asset->getUrl(), 'uppy-custom')) {
-                        unset($assets[$key]);
-                    }
-                }
+            // Process CSS optimization
+            if ($this->configuration['removeCSSjunk'] && $type === 'css') {
+                $assets = $this->processCSSOptimization($assets, $requestContext, $pageTypes);
             }
-            // dump($assets);
-            foreach ($assets as $key => $asset) {
-                if ($type === 'js' && $removeAdobeJSJunk) {
-                    if (strpos($asset->getUrl(), 'js/react')) {
-                        unset($assets[$key]);
-                        if ($reactEnabled) {
-                            array_unshift($assets, $asset);
-                        }
-                    }
-                    if (strpos($asset->getUrl(), 'vue')) {
-                        unset($assets[$key]);
-                        if ($vueEnabled) {
-                            array_unshift($assets, $asset);
-                        }
-                    }
-                    if (strpos($asset->getUrl(), 'require')) {
-                        if ($removeAdobeJSJunk)
-                        //dd($removeAdobeJSJunk);
-                        {
-                            unset($assets[$key]);
-                        }
-
-                        // junk True ; protection False
-                        // echo "require " . (string) $removeProtection;
-                        if (!$removeAdobeJSJunk || !in_array($actionName, $this->actionFilter));
-                        array_unshift($assets, $asset);
-                    }
-                    if (strpos($asset->getUrl(), 'require')) {
-                        if ($removeAdobeJSJunk)
-                        //dd($removeAdobeJSJunk);
-                        {
-                            unset($assets[$key]);
-                        }
-
-                        // junk True ; protection False
-                        // echo "require " . (string) $removeProtection;
-                        if (!$removeAdobeJSJunk || !in_array($actionName, $this->actionFilter));
-                        array_unshift($assets, $asset);
-                    }
-                }
-                if ($type === 'css') {
-                    if (strpos($asset->getUrl(), 'styles-')) {
-                        unset($assets[$key]);
-                        if (!$removeCSSjunk || !in_array($actionName, $this->actionFilter)) {
-                            array_unshift($assets, $asset);
-                        }
-                    }
-                }
+            
+            // Process JavaScript optimization
+            if ($type === 'js') {
+                $assets = $this->processJavaScriptOptimization($assets, $requestContext);
             }
-            // we need execute it one more time to make scripts the same order
-            foreach ($assets as $key => $asset) {
-                if (strpos($asset->getUrl(), 'require') && $removeAdobeJSJunk) {
-                    unset($assets[$key]);
-                    array_unshift($assets, $asset);
-                    // dd($assets);
-                }
-            }
-
-            if ($type === 'js' && $removeAdobeJSJunk) {
-                foreach ($assets as $key => $asset) {
-                    if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
-                        unset($assets[$key]);
-                        array_unshift($assets, $asset);
-                    }
-                }
-            }
-
-            // Changes Ends
-
-            foreach ($assets as $asset) {
-                $template = $this->getAssetTemplate(
-                    $group->getProperty(GroupedCollection::PROPERTY_CONTENT_TYPE),
-                    $this->addDefaultAttributes($this->getAssetContentType($asset), $attributes)
-                );
-                $result .= sprintf($template, $asset->getUrl());
-            }
+            
+            // Generate HTML result
+            $result = $this->generateAssetHtml($assets, $group, $attributes);
+            
         } catch (LocalizedException $e) {
             $this->logger->critical($e);
-            $result .= sprintf($template, $this->urlBuilder->getUrl('', ['_direct' => 'core/index/notFound']));
+            $result = $this->generateErrorHtml($attributes);
         }
 
-        if ($removeCSSjunk) {
-            // mobile CSS
-            if ($assetOptimized && !($assetProductOptimized || $assetCategoryOptimized)) {
-                $result = '<link  rel="stylesheet" type="text/css"  media="all" href="' . $assetOptimized . '" />' . "\n" . $result;
-            }
-            if ($assetOptimizedLarge) {
-                $result = '<link  rel="stylesheet" type="text/css"  media="screen and (min-width: 768px)" href="' . $assetOptimizedLarge . '" />' . "\n" . $result;
-            }
-            if ($assetProductOptimized && $isProduct) {
-                if ($optimisedProductCSSFileCriticalPath && file_exists($optimisedProductCSSFileCriticalPath)) {
-                    if (!$criticalCSSHTML) {
-                        // ToDo: check if push works
-                        @header("Link: <" . $optimisedProductCSSFileCriticalUrl . ">; rel=preload; as=style", false);
-                        $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
-                    }
-                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetProductOptimized . '" />' . "\n" . $result;
-                } else {
-                    $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetProductOptimized . '" />' . "\n" . $result;
-                }
-            } else if (!$assetProductOptimized && $isProduct) {
-                if ($optimisedProductCSSFileCriticalPath && file_exists($optimisedProductCSSFileCriticalPath)) {
-                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
-                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetNotOptimisedMobile . '" />' . "\n" . $result;
-                }
-            }
-            if ($assetCategoryOptimized && $isCategory) {
-                if ($optimisedCategoryCSSFileCriticalPath && file_exists($optimisedCategoryCSSFileCriticalPath)) {
-                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedCategoryCSSFileCriticalUrl . '" />' . "\n" . $result;
-                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
-                } else {
-                    $result = '<link  rel="stylesheet" type="text/css" media="all" href="' . $assetCategoryOptimized . '" />' . "\n" . $result;
-                }
-            } else if (!$assetCategoryOptimized && $isCategory) {
-                if ($optimisedCategoryCSSFileCriticalPath && file_exists($optimisedCategoryCSSFileCriticalPath)) {
-                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimisedProductCSSFileCriticalUrl . '" />' . "\n" . $result;
-                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';"  href="' . $$assetNotOptimisedLarge . '" />' . "\n" . $result;
-                }
-            }
+        // Add optimized CSS links
+        if ($this->configuration['removeCSSjunk']) {
+            $result = $this->addOptimizedCSSLinks($result, $pageTypes);
         }
 
-        if ($removeAdobeJSJunk && $type === 'js' && $removeController) {
-            // dd($result);
-            // Remove RequireJS and other scripts if needed
-            $result = preg_replace('/<script[^>]*require[^>]*><\/script>/', '', $result);
+        // Remove Adobe JS junk
+        if ($this->configuration['removeAdobeJSJunk'] && $type === 'js' && $requestContext['removeController']) {
+            $result = $this->removeAdobeJSJunk($result);
         }
+        
         $endTime = microtime(true);
         $time = $endTime - $startTime;
         //header("Server-Timing: x-mag-react;dur=" . number_format($time * 1000, 2), false);
         return $result;
     }
 
+    /**
+     * Get configuration settings from config
+     */
+    private function getConfigurationSettings(): array
+    {
+        return [
+            'reactEnabled' => boolval($this->config->getValue('react_vue_config/react/enable')),
+            'vueEnabled' => boolval($this->config->getValue('react_vue_config/vue/enable')),
+            'removeAdobeJSJunk' => boolval($this->config->getValue('react_vue_config/junk/remove')),
+            'removeCSSjunk' => boolval($this->config->getValue('react_vue_config/css/remove')),
+            'criticalCSSHTML' => boolval($this->config->getValue('react_vue_config/css/critical'))
+        ];
+    }
+
+    /**
+     * Get request context information
+     */
+    private function getRequestContext(): array
+    {
+        $area = $this->state->getAreaCode();
+        $request = $this->objectManager->get(\Magento\Framework\App\Request\Http::class);
+        $actionName = $request->getFullActionName();
+        $requestURL = $_SERVER['REQUEST_URI'];
+        
+        @header("Action-Name: $actionName");
+        
+        $removeProtection = boolval(boolval(strpos($requestURL, 'checkout')) || boolval(strpos($requestURL, 'customer')) || $area === 'adminhtml');
+        @header("React-Protection: $removeProtection");
+        
+        $removeController = in_array($actionName, $this->actionFilter);
+        
+        return [
+            'actionName' => $actionName,
+            'removeProtection' => $removeProtection,
+            'removeController' => $removeController,
+            'area' => $area
+        ];
+    }
+
+    /**
+     * Initialize asset variables
+     */
+    private function initializeAssetVariables(): void
+    {
+        $this->assetVariables = [
+            'assetOptimized' => false,
+            'assetOptimizedLarge' => false,
+            'assetProductOptimized' => false,
+            'assetCategoryOptimized' => false,
+            'assetNotOptimisedMobile' => false,
+            'assetNotOptimisedLarge' => false,
+            'optimisedProductCSSFileCriticalPath' => false,
+            'optimisedCategoryCSSFileCriticalPath' => false,
+            'optimisedProductCSSFileCriticalUrl' => '',
+            'optimisedCategoryCSSFileCriticalUrl' => ''
+        ];
+    }
+
+    /**
+     * Determine page types based on action name
+     */
+    private function determinePageTypes(string $actionName): array
+    {
+        return [
+            'isProduct' => in_array($actionName, ['catalog_product_view']),
+            'isCategory' => in_array($actionName, ['catalog_category_view', 'catalogsearch_result_index'])
+        ];
+    }
+
+    /**
+     * Process CSS optimization
+     */
+    private function processCSSOptimization(array $assets, array $requestContext, array $pageTypes): array
+    {
+        $baseURL = $this->store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
+        
+        foreach ($assets as $key => $asset) {
+            $assets = $this->processMobileCSS($assets, $key, $asset, $requestContext, $pageTypes, $baseURL);
+            $assets = $this->processLargeCSS($assets, $key, $asset, $requestContext, $baseURL);
+            $assets = $this->removeUnwantedCSS($assets, $key, $asset, $requestContext);
+        }
+        
+        return $assets;
+    }
+
+    /**
+     * Process mobile CSS optimization
+     */
+    private function processMobileCSS(array $assets, $key, $asset, array $requestContext, array $pageTypes, string $baseURL): array
+    {
+        if (in_array($requestContext['actionName'], $this->actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
+            $this->assetVariables['assetNotOptimisedMobile'] = $asset->getUrl();
+            
+            // Set up optimized file paths and URLs
+            $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
+            $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
+            
+            $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.css';
+            $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.css';
+            $this->assetVariables['optimisedProductCSSFileCriticalPath'] = BP . '/pub/static/product-critical-m.css';
+            $optimisedProductCSSFilePath = BP . '/pub/static/product-styles-m.css';
+            
+            $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.css';
+            $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
+            $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css';
+            $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = BP . '/pub/static/category-critical-m.css';
+            
+            // Check and set optimized assets
+            if ($this->checkFile($optimisedCSSFilePath)) {
+                $this->assetVariables['assetOptimized'] = $optimisedCSSFileUrl;
+                unset($assets[$key]);
+            }
+            if ($this->checkFile($optimisedProductCSSFilePath) && $pageTypes['isProduct']) {
+                $this->assetVariables['assetProductOptimized'] = $this->assetVariables['optimisedProductCSSFileUrl'];
+                unset($assets[$key]);
+            }
+            if ($this->checkFile($optimisedCategoryCSSFilePath) && $pageTypes['isCategory']) {
+                $this->assetVariables['assetCategoryOptimized'] = $this->assetVariables['optimisedCategoryCSSFileUrl'];
+                unset($assets[$key]);
+            }
+        }
+        
+        return $assets;
+    }
+
+    /**
+     * Process large CSS optimization
+     */
+    private function processLargeCSS(array $assets, $key, $asset, array $requestContext, string $baseURL): array
+    {
+        if (in_array($requestContext['actionName'], $this->actionFilter) && strpos($asset->getUrl(), 'styles-l')) {
+            $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.css';
+            $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
+            $this->assetVariables['assetNotOptimisedLarge'] = $asset->getUrl();
+            
+            if ($this->checkFile($optimisedCSSFilePathLarge)) {
+                $this->assetVariables['assetOptimizedLarge'] = $optimisedCSSFileUrlLarge;
+                unset($assets[$key]);
+            } else {
+                @header('Optimised-CSS: false');
+            }
+        }
+        
+        return $assets;
+    }
+
+    /**
+     * Remove unwanted CSS files
+     */
+    private function removeUnwantedCSS(array $assets, $key, $asset, array $requestContext): array
+    {
+        $unwantedFiles = ['calendar', 'gallery', 'uppy-custom'];
+        
+        foreach ($unwantedFiles as $unwanted) {
+            if (in_array($requestContext['actionName'], $this->actionFilter) && strpos($asset->getUrl(), $unwanted)) {
+                unset($assets[$key]);
+                break;
+            }
+        }
+        
+        return $assets;
+    }
+
+    /**
+     * Process JavaScript optimization
+     */
+    private function processJavaScriptOptimization(array $assets, array $requestContext): array
+    {
+        if ($this->configuration['removeAdobeJSJunk']) {
+            $assets = $this->processReactVueAssets($assets, $requestContext);
+            $assets = $this->processRequireJSAssets($assets, $requestContext);
+        }
+        
+        // Reorder assets for proper script loading
+        $assets = $this->reorderAssets($assets, $requestContext);
+        
+        return $assets;
+    }
+
+    /**
+     * Process React and Vue assets
+     */
+    private function processReactVueAssets(array $assets, array $requestContext): array
+    {
+        foreach ($assets as $key => $asset) {
+            if (strpos($asset->getUrl(), 'js/react')) {
+                unset($assets[$key]);
+                if ($this->configuration['reactEnabled']) {
+                    array_unshift($assets, $asset);
+                }
+            }
+            if (strpos($asset->getUrl(), 'vue')) {
+                unset($assets[$key]);
+                if ($this->configuration['vueEnabled']) {
+                    array_unshift($assets, $asset);
+                }
+            }
+        }
+        
+        return $assets;
+    }
+
+    /**
+     * Process RequireJS assets
+     */
+    private function processRequireJSAssets(array $assets, array $requestContext): array
+    {
+        foreach ($assets as $key => $asset) {
+            if (strpos($asset->getUrl(), 'require')) {
+                if ($this->configuration['removeAdobeJSJunk']) {
+                    unset($assets[$key]);
+                }
+                
+                if (!$this->configuration['removeAdobeJSJunk'] || !in_array($requestContext['actionName'], $this->actionFilter)) {
+                    array_unshift($assets, $asset);
+                }
+            }
+        }
+        
+        return $assets;
+    }
+
+    /**
+     * Reorder assets for proper loading
+     */
+    private function reorderAssets(array $assets, array $requestContext): array
+    {
+        // Execute one more time to make scripts the same order
+        foreach ($assets as $key => $asset) {
+            if (strpos($asset->getUrl(), 'require') && $this->configuration['removeAdobeJSJunk']) {
+                unset($assets[$key]);
+                array_unshift($assets, $asset);
+            }
+        }
+        
+        if ($this->configuration['removeAdobeJSJunk']) {
+            foreach ($assets as $key => $asset) {
+                if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
+                    unset($assets[$key]);
+                    array_unshift($assets, $asset);
+                }
+            }
+        }
+        
+        return $assets;
+    }
+
+    /**
+     * Generate asset HTML
+     */
+    private function generateAssetHtml(array $assets, $group, ?string $attributes): string
+    {
+        $result = '';
+        $attributes = $attributes ?? '';
+        
+        foreach ($assets as $asset) {
+            $template = $this->getAssetTemplate(
+                $group->getProperty(GroupedCollection::PROPERTY_CONTENT_TYPE),
+                $this->addDefaultAttributes($this->getAssetContentType($asset), $attributes)
+            );
+            $result .= sprintf($template, $asset->getUrl());
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Generate error HTML
+     */
+    private function generateErrorHtml(?string $attributes): string
+    {
+        $attributes = $attributes ?? '';
+        $template = $this->getAssetTemplate('js', $attributes);
+        return sprintf($template, $this->urlBuilder->getUrl('', ['_direct' => 'core/index/notFound']));
+    }
+
+    /**
+     * Add optimized CSS links
+     */
+    private function addOptimizedCSSLinks(string $result, array $pageTypes): string
+    {
+        // Mobile CSS
+        if ($this->assetVariables['assetOptimized'] && !($this->assetVariables['assetProductOptimized'] || $this->assetVariables['assetCategoryOptimized'])) {
+            $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+        }
+        
+        if ($this->assetVariables['assetOptimizedLarge']) {
+            $result = '<link rel="stylesheet" type="text/css" media="screen and (min-width: 768px)" href="' . $this->assetVariables['assetOptimizedLarge'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+        }
+        
+        // Product CSS
+        $result = $this->addProductCSSLinks($result, $pageTypes);
+        
+        // Category CSS
+        $result = $this->addCategoryCSSLinks($result, $pageTypes);
+        
+        return $result;
+    }
+
+    /**
+     * Add product CSS links
+     */
+    private function addProductCSSLinks(string $result, array $pageTypes): string
+    {
+        if ($this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
+            if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
+                if (!$this->configuration['criticalCSSHTML']) {
+                    @header("Link: <" . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . ">; rel=preload; as=style", false);
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                }
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetProductOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            } else {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetProductOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            }
+        } else if (!$this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
+            if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Add category CSS links
+     */
+    private function addCategoryCSSLinks(string $result, array $pageTypes): string
+    {
+        if ($this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
+            if ($this->assetVariables['optimisedCategoryCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath'])) {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetCategoryOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            } else {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetCategoryOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            }
+        } else if (!$this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
+            if ($this->assetVariables['optimisedCategoryCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath'])) {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Remove Adobe JS junk
+     */
+    private function removeAdobeJSJunk(string $result): string
+    {
+        return preg_replace('/<script[^>]*require[^>]*><\/script>/', '', $result);
+    }
+
     public function checkFile($file)
     {
-        // TODO: add APCu or file cache optimisation
+        // APCu cache optimization for file existence checks
+        if ($this->apcuEnabled === null) {
+            $this->apcuEnabled = extension_loaded('apcu') && ini_get('apc.enabled');
+        }
+        if ($this->apcuEnabled) {
+            // Use fastest available hash function
+            if (function_exists('hash') && in_array('xxh3', hash_algos())) {
+                $cacheKey = 'file_exists_' . hash('xxh3', $file) . '_' . $this->getStaticVersion();
+            } elseif (function_exists('hash') && in_array('xxh64', hash_algos())) {
+                $cacheKey = 'file_exists_' . hash('xxh64', $file) . '_' . $this->getStaticVersion();
+            } elseif (function_exists('hash') && in_array('crc32', hash_algos())) {
+                $cacheKey = 'file_exists_' . hash('crc32', $file) . '_' . $this->getStaticVersion();
+            } else {
+                // Fallback to crc32() function (fastest built-in)
+                $cacheKey = 'file_exists_' . crc32($file) . '_' . $this->getStaticVersion();
+            }
+            
+            $cachedResult = apcu_fetch($cacheKey);
+            
+            if ($cachedResult !== false) {
+                return $cachedResult;
+            }
+            
+            $exists = file_exists($file);
+            // Cache for 1 hour (3600 seconds) - adjust as needed
+            apcu_store($cacheKey, $exists, 3600);
+            
+            return $exists;
+        }
+        
+        // Fallback to direct file_exists if APCu is not available
         return file_exists($file);
     }
 
-    /*
+    public function getStaticVersion(){
+        if($this->staticVersion == 0){
+            $this->staticVersion = @file_get_contents(BP . '/pub/static/deployed_version.txt');
+        }
+        return $this->staticVersion;
+    }
+
+/*
  * Alternative
  *  protected function getIncludes()
  *  {
