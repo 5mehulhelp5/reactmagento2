@@ -408,11 +408,11 @@ class ReactInjectPlugin extends Renderer
     {
         // Mobile CSS
         if ($this->assetVariables['assetOptimized'] && !($this->assetVariables['assetProductOptimized'] || $this->assetVariables['assetCategoryOptimized'])) {
-            $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetOptimized'] . '" />' . "\n" . $result;
         }
         
         if ($this->assetVariables['assetOptimizedLarge']) {
-            $result = '<link rel="stylesheet" type="text/css" media="screen and (min-width: 768px)" href="' . $this->assetVariables['assetOptimizedLarge'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+            $result = '<link rel="stylesheet" type="text/css" media="screen and (min-width: 768px)" href="' . $this->assetVariables['assetOptimizedLarge'] . '" />' . "\n" . $result;
         }
         
         // Product CSS
@@ -433,16 +433,16 @@ class ReactInjectPlugin extends Renderer
             if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
                 if (!$this->configuration['criticalCSSHTML']) {
                     @header("Link: <" . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . ">; rel=preload; as=style", false);
-                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '" />' . "\n" . $result;
                 }
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetProductOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
             } else {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetProductOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
             }
         } else if (!$this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
             if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '" />' . "\n" . $result;
             }
         }
         
@@ -456,15 +456,15 @@ class ReactInjectPlugin extends Renderer
     {
         if ($this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
             if ($this->assetVariables['optimisedCategoryCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath'])) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetCategoryOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetCategoryOptimized'] . '" />' . "\n" . $result;
             } else {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetCategoryOptimized'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetCategoryOptimized'] . '" />' . "\n" . $result;
             }
         } else if (!$this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
             if ($this->assetVariables['optimisedCategoryCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath'])) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '?v=' . $this->getStaticVersion() . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '" />' . "\n" . $result;
             }
         }
         
