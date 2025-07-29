@@ -65,4 +65,9 @@ class Template extends MTemplate
         return $removeCSSjunk;
     }
 
+    public function getInlineJs($file) {
+        $jsContent = file_get_contents(__DIR__ . '/view/frontend/web/js/' . $file);
+        return '<script>' . $jsContent . '</script>';
+    }
+
 }

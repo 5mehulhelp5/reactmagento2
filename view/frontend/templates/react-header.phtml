@@ -8,7 +8,7 @@ if ($criticalCSSHTML || isset($_GET['css-html'])) {
 if ($isProductPage && $criticalCSSHTML) {
     $css = @file_get_contents(BP . '/pub/static/product-critical-m.css');
     ?>
-<style media="all">
+<style media="all" id="critical-css">
 <?=$css?>
 </style>
 <?php
