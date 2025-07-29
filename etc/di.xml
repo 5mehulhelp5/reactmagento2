@@ -12,4 +12,12 @@
     <type name="Magento\Deploy\Service\DeployStaticContent">
         <plugin name="reactluma_post_deploy_copy_static" type="React\React\Plugin\PostDeployCopy" sortOrder="10"/>
     </type>
+
+    <type name="React\React\Template">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item name="minify" xsi:type="boolean">true</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

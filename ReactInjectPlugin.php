@@ -11,6 +11,7 @@ use Magento\Framework\View\Page\Config\Metadata\MsApplicationTileImage;
 use Magento\Framework\View\Page\Config\Renderer;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\ObjectManager;
+use React\React\Template;
 
 /**
  * Page config Renderer model Plugin
@@ -39,6 +40,8 @@ class ReactInjectPlugin extends Renderer
     private $configuration = [];
 
     /**
+     * ReactInjectPlugin constructor
+     *
      * @param Config $pageConfig
      * @param \Magento\Framework\View\Asset\MergeService $assetMergeService
      * @param \Magento\Framework\UrlInterface $urlBuilder
@@ -46,6 +49,10 @@ class ReactInjectPlugin extends Renderer
      * @param \Magento\Framework\Stdlib\StringUtils $string
      * @param \Psr\Log\LoggerInterface $logger
      * @param MsApplicationTileImage|null $msApplicationTileImage
+     * @param ScopeConfigInterface $config
+     * @param State $state
+     * @param StoreManagerInterface $store
+     * @param Template $template
      */
     public function __construct(
         Config $pageConfig,
@@ -57,7 +64,8 @@ class ReactInjectPlugin extends Renderer
         MsApplicationTileImage $msApplicationTileImage = null,
         private ScopeConfigInterface $config,
         private State $state,
-        private StoreManagerInterface $store
+        private StoreManagerInterface $store,
+        private Template $template
     ) {
         parent::__construct($pageConfig, $assetMergeService, $urlBuilder, $escaper, $string, $logger, $msApplicationTileImage);
         $this->configuration = $this->getConfigurationSettings();
@@ -220,6 +228,9 @@ class ReactInjectPlugin extends Renderer
             
             // Set up optimized file paths and URLs
             $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
+            if ($this->isMinifyEnabled()) {
+                $optimisedCSSFileUrl = $baseURL . 'styles-m.min.css';
+            }
             $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
             
             $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.css';
@@ -231,6 +242,13 @@ class ReactInjectPlugin extends Renderer
             $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
             $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css';
             $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = BP . '/pub/static/category-critical-m.css';
+
+            if ($this->isMinifyEnabled()) {
+                $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.min.css';
+                $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.min.css';
+                $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.css';
+                $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css'; 
+            }
             
             // Check and set optimized assets
             if ($this->checkFile($optimisedCSSFilePath)) {
@@ -257,6 +275,9 @@ class ReactInjectPlugin extends Renderer
     {
         if (in_array($requestContext['actionName'], $this->actionFilter) && strpos($asset->getUrl(), 'styles-l')) {
             $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.css';
+            if ($this->isMinifyEnabled()) {
+                $optimisedCSSFileUrlLarge = $baseURL . 'styles-l.min.css';
+            }
             $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
             $this->assetVariables['assetNotOptimisedLarge'] = $asset->getUrl();
             
@@ -520,6 +541,18 @@ class ReactInjectPlugin extends Renderer
             $this->staticVersion = @file_get_contents(BP . '/pub/static/deployed_version.txt');
         }
         return $this->staticVersion;
+    }
+
+    /**
+     * Check if minification is enabled via template
+     * 
+     * For now inclides files with .min instead of main css files
+     *
+     * @return bool
+     */
+    public function isMinifyEnabled(): bool
+    {
+        return $this->template->isMinifyEnabled();
     }
 
 /*

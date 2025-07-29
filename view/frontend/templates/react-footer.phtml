@@ -8,9 +8,14 @@ if(isset($_GET['js-inline'])) {
 <?php 
 if($this->removeAdobeJSJunk()) {
     if(!$inlineJs) {
-?>
-<script defer src="<?php echo $block->getViewFileUrl('React_React::js/react-core.js'); ?>"></script>
-<?php
+        if($this->isMinifyEnabled(true)) {
+            $fileName = $block->getViewFileUrl('React_React::js/react-core.min.js');
+        } else {
+            $fileName = $block->getViewFileUrl('React_React::js/react-core.js');
+        }
+        ?>
+        <script defer src="<?php echo $fileName; ?>"></script>
+        <?php
     } else {
         echo $this->getInlineJs('react-core.js');
     }

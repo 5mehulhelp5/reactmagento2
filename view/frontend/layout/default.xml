@@ -21,7 +21,11 @@
                 template="React_React::react-footer-css.phtml"/>
             <block class="React\React\Template"
                 name="react-luma.footer.block"
-                template="React_React::react-footer.phtml"/>
+                template="React_React::react-footer.phtml">
+                <arguments>
+                    <argument name="minify" xsi:type="boolean">true</argument>
+                </arguments>
+            </block>
         </referenceContainer>
         <referenceBlock name="navigation.sections">
             <block class="Magento\Framework\View\Element\Template" name="store.link2" group="navigation-sections" template="React_React::topmenu-account.phtml">

@@ -24,6 +24,7 @@ class Template extends MTemplate
         $this->om = $om;
         $this->registry = $registry;
         $this->config = $config;
+
         parent::__construct($context, $data);
     }
 
@@ -68,6 +69,17 @@ class Template extends MTemplate
     public function getInlineJs($file) {
         $jsContent = file_get_contents(__DIR__ . '/view/frontend/web/js/' . $file);
         return '<script>' . $jsContent . '</script>';
+    }
+
+
+    /**
+     * Check if minification is enabled
+     *
+     * @return bool|null
+     */
+    public function isMinifyEnabled($flag = false)
+    {
+        return $this->getData('minify');
     }
 
 }
