@@ -1,0 +1,284 @@
+{
+  "styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link",
+        "https://react-luma.cnxt.link/men/bottoms-men/pants-men.html",
+        "https://react-luma.cnxt.link/women",
+        "https://react-luma.cnxt.link/customer/account"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_1.html",
+        "content/react_luma_cnxt_link_2.html",
+        "./templates/*.html",
+        "./view/frontend/templates/**/*.phtml",
+        "./components/*.vue",
+        "./js/**/*.js"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "page-wrapper",
+        "page-main",
+        "page-header",
+        "page-footer",
+        "navigation",
+        "breadcrumbs"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".dev-*",
+        ".staging-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".ie-*",
+        ".firefox-*",
+        ".chrome-*"
+      ]
+    }
+  },
+  "styles-l.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_1.html",
+        "./templates/*.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "page-wrapper",
+        "page-main"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*"
+      ]
+    }
+  },
+  "product-styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link",
+        "https://react-luma.cnxt.link/men/bottoms-men/pants-men.html",
+        "https://react-luma.cnxt.link/thorpe-track-pant.html"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_1.html",
+        "./view/frontend/templates/product/**/*.phtml",
+        "./view/frontend/templates/catalog/product/**/*.phtml"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "product-item",
+        "product-image",
+        "product-details",
+        "product-actions",
+        "product-options",
+        "swatch-*",
+        "gallery-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".product-debug-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".product-old-*",
+        ".product-legacy-*"
+      ]
+    }
+  },
+  "category-styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link/men/bottoms-men/pants-men.html",
+        "https://react-luma.cnxt.link/women/tops-women"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_2.html",
+        "./view/frontend/templates/catalog/category/**/*.phtml",
+        "./view/frontend/templates/catalog/product/list.phtml"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "category-page",
+        "product-grid",
+        "toolbar",
+        "sorter",
+        "limiter",
+        "pager"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".category-debug-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".category-old-*"
+      ]
+    }
+  },
+  "checkout-styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link/checkout",
+        "https://react-luma.cnxt.link/checkout/cart"
+      ],
+      "paths": [
+        "./view/frontend/templates/checkout/**/*.phtml",
+        "./view/frontend/templates/cart/**/*.phtml"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "checkout-*",
+        "cart-*",
+        "payment-*",
+        "shipping-*",
+        "billing-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*"
+      ]
+    }
+  },
+  "customer-styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link/customer/account",
+        "https://react-luma.cnxt.link/customer/account/login"
+      ],
+      "paths": [
+        "./view/frontend/templates/customer/**/*.phtml",
+        "./view/frontend/templates/customer/account/**/*.phtml"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "customer-*",
+        "account-*",
+        "login-*",
+        "register-*",
+        "dashboard-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*"
+      ]
+    }
+  },
+  "admin-styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link/admin"
+      ],
+      "paths": [
+        "./view/adminhtml/templates/**/*.phtml",
+        "./view/adminhtml/web/**/*.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "admin-*",
+        "dashboard-*",
+        "menu-*",
+        "sidebar-*",
+        "content-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".admin-debug-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".admin-old-*"
+      ]
+    }
+  }
+} 

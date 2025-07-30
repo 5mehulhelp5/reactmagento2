@@ -15,6 +15,9 @@ If specific CSS files from the extension are missing, manually copy them:
 cp -R {path to extension}/pub/static/* pub/static/
 ‘’’
 
+## SCSS to CSS Compilation Manual
+To compile SCSS files in React-Luma, navigate to the module directory (vendor/genaker/magento-reactjs) and run node css-compile.js. This script automatically finds all .scss files in pub/static/, compiles them to minified CSS using Sass and PostCSS with autoprefixer and cssnano, and outputs detailed statistics including file sizes and selector counts. The compiled .min.css files are saved in the same directory, ready for production use. Ensure Node.js is installed and run npm install first to install dependencies (sass, postcss, autoprefixer, cssnano, glob).
+
 # Video overview of the React-Luma
 
 Video is here -> https://www.youtube.com/watch?v=TJPNAgDCkWk

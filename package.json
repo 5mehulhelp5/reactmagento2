@@ -1,7 +1,8 @@
 {
   "name": "reacttable",
   "version": "1.0.0",
-  "description": "",
+  "type": "module",
+  "description": "The React-Luma Module is a Faster and Free Open-Source Magento 2 Luma or another Theme Optimiser and Hyva Theme Alternative. Actually, you don't even need to change the Theme. It works as a composer module to improve your existing theme without re-platforming to Hyva, or it can be used to improve Hyva.",
   "main": "index.js",
   "scripts": {
     "start": "webpack --mode development --watch",
@@ -24,9 +25,20 @@
     "webpack-livereload-plugin": "^2.2.0"
   },
   "dependencies": {
+    "@fullhuman/postcss-purgecss": "^5.0.0",
+    "autoprefixer": "^10.4.21",
+    "chokidar": "^3.5.3",
+    "cssnano": "^7.1.0",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.3",
     "html-react-parser": "^0.7.1",
     "js-cookie": "^2.2.0",
+    "node-fetch": "^2.7.0",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
     "react": "^16.8.6",
-    "react-dom": "^16.8.6"
-  }
+    "react-dom": "^16.8.6",
+    "sass": "^1.89.2"
+  },
+  "keywords": []
 }

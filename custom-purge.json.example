@@ -1,0 +1,282 @@
+{
+  "main-styles.css": {
+    "content": {
+      "urls": [
+        "https://mywebsite.com",
+        "https://mywebsite.com/about",
+        "https://mywebsite.com/contact",
+        "https://mywebsite.com/blog"
+      ],
+      "paths": [
+        "./src/templates/*.html",
+        "./src/components/*.vue",
+        "./src/pages/*.jsx",
+        "./public/index.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "app",
+        "root",
+        "main",
+        "header",
+        "footer",
+        "nav",
+        "sidebar"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".dev-*",
+        ".staging-*",
+        ".local-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".ie-*",
+        ".firefox-*",
+        ".chrome-*",
+        ".safari-*"
+      ]
+    }
+  },
+  "component-styles.css": {
+    "content": {
+      "urls": [
+        "https://mywebsite.com/components"
+      ],
+      "paths": [
+        "./src/components/**/*.vue",
+        "./src/components/**/*.jsx",
+        "./src/components/**/*.tsx"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "component-*",
+        "btn-*",
+        "card-*",
+        "modal-*",
+        "form-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*"
+      ]
+    }
+  },
+  "admin-styles.css": {
+    "content": {
+      "urls": [
+        "https://mywebsite.com/admin",
+        "https://mywebsite.com/admin/dashboard",
+        "https://mywebsite.com/admin/users"
+      ],
+      "paths": [
+        "./src/admin/**/*.html",
+        "./src/admin/**/*.vue",
+        "./src/admin/**/*.jsx"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "admin-*",
+        "dashboard-*",
+        "sidebar-*",
+        "menu-*",
+        "content-*",
+        "table-*",
+        "form-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".admin-debug-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".admin-old-*"
+      ]
+    }
+  },
+  "mobile-styles.css": {
+    "content": {
+      "urls": [
+        "https://mywebsite.com",
+        "https://mywebsite.com/mobile"
+      ],
+      "paths": [
+        "./src/mobile/**/*.html",
+        "./src/mobile/**/*.vue"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "mobile-*",
+        "touch-*",
+        "swipe-*",
+        "gesture-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".desktop-*"
+      ]
+    }
+  },
+  "print-styles.css": {
+    "content": {
+      "urls": [
+        "https://mywebsite.com/print"
+      ],
+      "paths": [
+        "./src/print/**/*.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "print-*",
+        "page-*",
+        "media-print"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".screen-*"
+      ]
+    }
+  },
+  "dark-theme.css": {
+    "content": {
+      "urls": [
+        "https://mywebsite.com/dark",
+        "https://mywebsite.com/settings"
+      ],
+      "paths": [
+        "./src/themes/dark/**/*.html",
+        "./src/themes/dark/**/*.vue"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "dark-*",
+        "theme-*",
+        "color-*",
+        "bg-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".light-*"
+      ]
+    }
+  },
+  "animation-styles.css": {
+    "content": {
+      "urls": [
+        "https://mywebsite.com/animations"
+      ],
+      "paths": [
+        "./src/animations/**/*.html",
+        "./src/animations/**/*.vue"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "animate-*",
+        "transition-*",
+        "keyframe-*",
+        "animation-*"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*"
+      ]
+    }
+  }
+} 
