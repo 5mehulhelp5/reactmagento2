@@ -246,8 +246,8 @@ class ReactInjectPlugin extends Renderer
             if ($this->isMinifyEnabled()) {
                 $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.min.css';
                 $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.min.css';
-                $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.css';
-                $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css'; 
+                $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.min.css';
+                $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.min.css'; 
             }
             
             // Check and set optimized assets
