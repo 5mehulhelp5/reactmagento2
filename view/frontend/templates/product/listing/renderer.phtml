@@ -65,7 +65,7 @@ foreach ($imageIndex as $imageId => $options) {
 
 // Get category image from Magento request object
 $request = $block->getRequest();
-$catImage = $request->getParam('cat_image');
+$catImage = $request->getParam('cat_image') ?? '';
 
 // Store configurable images data for JavaScript
 $configurableImagesData = [];
@@ -109,7 +109,7 @@ function loadGalleryImages(productId) {
 }
 
 // Load gallery if cat_image parameter is present
-if (catImage) {
+if (catImage !== '') {
     loadGalleryImages(catImage);
 }
 </script>
