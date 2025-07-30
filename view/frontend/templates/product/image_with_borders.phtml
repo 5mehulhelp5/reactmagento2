@@ -12,18 +12,16 @@ $width = (int) $block->getWidth();
 $height = (int) $block->getHeight();
 $paddingBottom = $block->getRatio() * 100;
 
-$request = $block->getRequest();
-$catImage = $request->getParam('cat_image_counter');
-
-if (!$catImage) {
-    $catImage = 0;
-    $request->setParam('cat_image_counter', $catImage);
+$globalBlock = $block->getLayout()->getBlock('header');
+if ($globalBlock) {
+    $catImage = $globalBlock->getData('cat_image_counter') ?? 0;
+    $catImage++;
+    $globalBlock->setData('cat_image_counter', $catImage);
+} else {
+    $catImage = 10;
 }
-$catImage++;
-$request->setParam('cat_image_counter', $catImage);
-
-$isProductPage = ($request->getFullActionName() === 'catalog_product_view');
-$isHomePage = ($request->getFullActionName() === 'cms_index_index');
+$isProductPage = ($block->getFullActionName() === 'catalog_product_view');
+$isHomePage = ($block->getFullActionName() === 'cms_index_index');
 ?>
 <span class="product-image-container product-image-container-<?=/* @noEscape */$block->getProductId()?>">
     <span class="product-image-wrapper">

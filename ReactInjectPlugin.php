@@ -3,14 +3,14 @@
 namespace React\React;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Asset\GroupedCollection;
-use Magento\Framework\View\Page\Config;
 use Magento\Framework\View\Page\Config\Metadata\MsApplicationTileImage;
 use Magento\Framework\View\Page\Config\Renderer;
+use Magento\Framework\View\Page\Config;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Framework\App\ObjectManager;
 use React\React\Template;
 
 /**
@@ -20,7 +20,6 @@ use React\React\Template;
  */
 class ReactInjectPlugin extends Renderer
 {
-
     // Allowed optimisations for
     public $actionFilter = [
         'catalog_category_view',
@@ -79,39 +78,41 @@ class ReactInjectPlugin extends Renderer
      */
     protected function renderAssetHtml(\Magento\Framework\View\Asset\PropertyGroup $group)
     {
-        @header("x-built-with: Ract-Luma", false);
+        @header('x-built-with: Ract-Luma', false);
         $startTime = microtime(true);
 
         $this->objectManager = ObjectManager::getInstance();
-        
+
         // Get request context
         $requestContext = $this->getRequestContext();
-        
+
         // Process assets
         $assets = $this->processMerge($group->getAll(), $group);
         $attributes = $this->getGroupAttributes($group);
         $type = $group->getProperties()['content_type'];
-        
+
         // Initialize asset variables
         $this->initializeAssetVariables();
-        
+
         // Determine page types
         $pageTypes = $this->determinePageTypes($requestContext['actionName']);
-        
+
         try {
             // Process CSS optimization
             if ($this->configuration['removeCSSjunk'] && $type === 'css') {
                 $assets = $this->processCSSOptimization($assets, $requestContext, $pageTypes);
             }
-            
+
             // Process JavaScript optimization
             if ($type === 'js') {
+                if (!is_array($assets)) {
+                    die('<h1>Assets should be an array disable JS merge configuration it is harmful for Magento performance!!!<h1>');
+                }
                 $assets = $this->processJavaScriptOptimization($assets, $requestContext);
             }
-            
+
             // Generate HTML result
             $result = $this->generateAssetHtml($assets, $group, $attributes);
-            
         } catch (LocalizedException $e) {
             $this->logger->critical($e);
             $result = $this->generateErrorHtml($attributes);
@@ -126,10 +127,10 @@ class ReactInjectPlugin extends Renderer
         if ($this->configuration['removeAdobeJSJunk'] && $type === 'js' && $requestContext['removeController']) {
             $result = $this->removeAdobeJSJunk($result);
         }
-        
+
         $endTime = microtime(true);
         $time = $endTime - $startTime;
-        //header("Server-Timing: x-mag-react;dur=" . number_format($time * 1000, 2), false);
+        // header("Server-Timing: x-mag-react;dur=" . number_format($time * 1000, 2), false);
         return $result;
     }
 
@@ -141,8 +142,8 @@ class ReactInjectPlugin extends Renderer
         return [
             'reactEnabled' => boolval($this->config->getValue('react_vue_config/react/enable')),
             'vueEnabled' => boolval($this->config->getValue('react_vue_config/vue/enable')),
-            'removeAdobeJSJunk' => boolval($this->config->getValue('react_vue_config/junk/remove')),
-            'removeCSSjunk' => boolval($this->config->getValue('react_vue_config/css/remove')),
+            'removeAdobeJSJunk' => boolval($this->template->removeAdobeJSJunk()),
+            'removeCSSjunk' => boolval($this->template->removeAdobeCSSJunk()),
             'criticalCSSHTML' => boolval($this->config->getValue('react_vue_config/css/critical'))
         ];
     }
@@ -156,14 +157,14 @@ class ReactInjectPlugin extends Renderer
         $request = $this->objectManager->get(\Magento\Framework\App\Request\Http::class);
         $actionName = $request->getFullActionName();
         $requestURL = $_SERVER['REQUEST_URI'];
-        
+
         @header("Action-Name: $actionName");
-        
+
         $removeProtection = boolval(boolval(strpos($requestURL, 'checkout')) || boolval(strpos($requestURL, 'customer')) || $area === 'adminhtml');
         @header("React-Protection: $removeProtection");
-        
+
         $removeController = in_array($actionName, $this->actionFilter);
-        
+
         return [
             'actionName' => $actionName,
             'removeProtection' => $removeProtection,
@@ -208,13 +209,13 @@ class ReactInjectPlugin extends Renderer
     private function processCSSOptimization(array $assets, array $requestContext, array $pageTypes): array
     {
         $baseURL = $this->store->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_STATIC);
-        
+
         foreach ($assets as $key => $asset) {
             $assets = $this->processMobileCSS($assets, $key, $asset, $requestContext, $pageTypes, $baseURL);
             $assets = $this->processLargeCSS($assets, $key, $asset, $requestContext, $baseURL);
             $assets = $this->removeUnwantedCSS($assets, $key, $asset, $requestContext);
         }
-        
+
         return $assets;
     }
 
@@ -225,19 +226,19 @@ class ReactInjectPlugin extends Renderer
     {
         if (in_array($requestContext['actionName'], $this->actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
             $this->assetVariables['assetNotOptimisedMobile'] = $asset->getUrl();
-            
+
             // Set up optimized file paths and URLs
             $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
             if ($this->isMinifyEnabled()) {
                 $optimisedCSSFileUrl = $baseURL . 'styles-m.min.css';
             }
             $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
-            
+
             $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.css';
             $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.css';
             $this->assetVariables['optimisedProductCSSFileCriticalPath'] = BP . '/pub/static/product-critical-m.css';
             $optimisedProductCSSFilePath = BP . '/pub/static/product-styles-m.css';
-            
+
             $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.css';
             $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
             $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css';
@@ -247,9 +248,9 @@ class ReactInjectPlugin extends Renderer
                 $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.min.css';
                 $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.min.css';
                 $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.min.css';
-                $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.min.css'; 
+                $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.min.css';
             }
-            
+
             // Check and set optimized assets
             if ($this->checkFile($optimisedCSSFilePath)) {
                 $this->assetVariables['assetOptimized'] = $optimisedCSSFileUrl;
@@ -264,7 +265,7 @@ class ReactInjectPlugin extends Renderer
                 unset($assets[$key]);
             }
         }
-        
+
         return $assets;
     }
 
@@ -280,7 +281,7 @@ class ReactInjectPlugin extends Renderer
             }
             $optimisedCSSFilePathLarge = BP . '/pub/static/styles-l.css';
             $this->assetVariables['assetNotOptimisedLarge'] = $asset->getUrl();
-            
+
             if ($this->checkFile($optimisedCSSFilePathLarge)) {
                 $this->assetVariables['assetOptimizedLarge'] = $optimisedCSSFileUrlLarge;
                 unset($assets[$key]);
@@ -288,7 +289,7 @@ class ReactInjectPlugin extends Renderer
                 @header('Optimised-CSS: false');
             }
         }
-        
+
         return $assets;
     }
 
@@ -298,14 +299,14 @@ class ReactInjectPlugin extends Renderer
     private function removeUnwantedCSS(array $assets, $key, $asset, array $requestContext): array
     {
         $unwantedFiles = ['calendar', 'gallery', 'uppy-custom'];
-        
+
         foreach ($unwantedFiles as $unwanted) {
             if (in_array($requestContext['actionName'], $this->actionFilter) && strpos($asset->getUrl(), $unwanted)) {
                 unset($assets[$key]);
                 break;
             }
         }
-        
+
         return $assets;
     }
 
@@ -318,10 +319,10 @@ class ReactInjectPlugin extends Renderer
             $assets = $this->processReactVueAssets($assets, $requestContext);
             $assets = $this->processRequireJSAssets($assets, $requestContext);
         }
-        
+
         // Reorder assets for proper script loading
         $assets = $this->reorderAssets($assets, $requestContext);
-        
+
         return $assets;
     }
 
@@ -344,7 +345,7 @@ class ReactInjectPlugin extends Renderer
                 }
             }
         }
-        
+
         return $assets;
     }
 
@@ -358,13 +359,13 @@ class ReactInjectPlugin extends Renderer
                 if ($this->configuration['removeAdobeJSJunk']) {
                     unset($assets[$key]);
                 }
-                
+
                 if (!$this->configuration['removeAdobeJSJunk'] || !in_array($requestContext['actionName'], $this->actionFilter)) {
                     array_unshift($assets, $asset);
                 }
             }
         }
-        
+
         return $assets;
     }
 
@@ -380,7 +381,7 @@ class ReactInjectPlugin extends Renderer
                 array_unshift($assets, $asset);
             }
         }
-        
+
         if ($this->configuration['removeAdobeJSJunk']) {
             foreach ($assets as $key => $asset) {
                 if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
@@ -389,7 +390,7 @@ class ReactInjectPlugin extends Renderer
                 }
             }
         }
-        
+
         return $assets;
     }
 
@@ -400,7 +401,7 @@ class ReactInjectPlugin extends Renderer
     {
         $result = '';
         $attributes = $attributes ?? '';
-        
+
         foreach ($assets as $asset) {
             $template = $this->getAssetTemplate(
                 $group->getProperty(GroupedCollection::PROPERTY_CONTENT_TYPE),
@@ -408,7 +409,7 @@ class ReactInjectPlugin extends Renderer
             );
             $result .= sprintf($template, $asset->getUrl());
         }
-        
+
         return $result;
     }
 
@@ -431,17 +432,17 @@ class ReactInjectPlugin extends Renderer
         if ($this->assetVariables['assetOptimized'] && !($this->assetVariables['assetProductOptimized'] || $this->assetVariables['assetCategoryOptimized'])) {
             $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetOptimized'] . '" />' . "\n" . $result;
         }
-        
+
         if ($this->assetVariables['assetOptimizedLarge']) {
             $result = '<link rel="stylesheet" type="text/css" media="screen and (min-width: 768px)" href="' . $this->assetVariables['assetOptimizedLarge'] . '" />' . "\n" . $result;
         }
-        
+
         // Product CSS
         $result = $this->addProductCSSLinks($result, $pageTypes);
-        
+
         // Category CSS
         $result = $this->addCategoryCSSLinks($result, $pageTypes);
-        
+
         return $result;
     }
 
@@ -453,7 +454,7 @@ class ReactInjectPlugin extends Renderer
         if ($this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
             if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
                 if (!$this->configuration['criticalCSSHTML']) {
-                    @header("Link: <" . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . ">; rel=preload; as=style", false);
+                    @header('Link: <' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '>; rel=preload; as=style', false);
                     $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '" />' . "\n" . $result;
                 }
                 $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
@@ -466,7 +467,7 @@ class ReactInjectPlugin extends Renderer
                 $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '" />' . "\n" . $result;
             }
         }
-        
+
         return $result;
     }
 
@@ -488,7 +489,7 @@ class ReactInjectPlugin extends Renderer
                 $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '" />' . "\n" . $result;
             }
         }
-        
+
         return $result;
     }
 
@@ -518,26 +519,27 @@ class ReactInjectPlugin extends Renderer
                 // Fallback to crc32() function (fastest built-in)
                 $cacheKey = 'file_exists_' . crc32($file) . '_' . $this->getStaticVersion();
             }
-            
+
             $cachedResult = apcu_fetch($cacheKey);
-            
+
             if ($cachedResult !== false) {
                 return $cachedResult;
             }
-            
+
             $exists = file_exists($file);
             // Cache for 1 hour (3600 seconds) - adjust as needed
             apcu_store($cacheKey, $exists, 3600);
-            
+
             return $exists;
         }
-        
+
         // Fallback to direct file_exists if APCu is not available
         return file_exists($file);
     }
 
-    public function getStaticVersion(){
-        if($this->staticVersion == 0){
+    public function getStaticVersion()
+    {
+        if ($this->staticVersion == 0) {
             $this->staticVersion = @file_get_contents(BP . '/pub/static/deployed_version.txt');
         }
         return $this->staticVersion;
@@ -545,7 +547,7 @@ class ReactInjectPlugin extends Renderer
 
     /**
      * Check if minification is enabled via template
-     * 
+     *
      * For now inclides files with .min instead of main css files
      *
      * @return bool
@@ -555,16 +557,16 @@ class ReactInjectPlugin extends Renderer
         return $this->template->isMinifyEnabled();
     }
 
-/*
- * Alternative
- *  protected function getIncludes()
- *  {
- *      $html = parent::getIncludes();
- *
- *      // Remove all `<script type="text/x-magento-init">` blocks
- *      $html = preg_replace('/<script[^>]+type=["\']text\/x-magento-init["\'][^>]*>.*?<\/script>/s', '', $html);
- *
- *      return $html;
- *  }
- */
+    /*
+     * Alternative
+     *  protected function getIncludes()
+     *  {
+     *      $html = parent::getIncludes();
+     *
+     *      // Remove all `<script type="text/x-magento-init">` blocks
+     *      $html = preg_replace('/<script[^>]+type=["\']text\/x-magento-init["\'][^>]*>.*?<\/script>/s', '', $html);
+     *
+     *      return $html;
+     *  }
+     */
 }
