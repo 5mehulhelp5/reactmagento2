@@ -25,13 +25,14 @@ $product = $block->getProduct()
                     "numberToShow" => json_decode($block->escapeJs($block->getNumberSwatchesPerProduct()), true),
                     "jsonConfig"=> json_decode($block->getJsonConfig(), true),
                     "jsonSwatchConfig"=>  json_decode($block->getJsonSwatchConfig(), true),
-                    "mediaCallback" => json_decode($block->escapeJs($block->escapeUrl($block->getMediaCallback())), true),
+                    "mediaCallback" => $block->getMediaCallback(),
                     "jsonSwatchImageSizeConfig" => json_decode($block->getJsonSwatchSizeConfig(), true),
                     "showTooltip"=> json_decode($block->escapeJs($configurableViewModel->getShowSwatchTooltip()), true)];
     
-    $configurableImages = $swatchData["jsonConfig"]['images'];
+    $configurableImages = $swatchData["jsonConfig"]; 
     $swatchConfig =  $swatchData["jsonConfig"]; 
-    $swatchAttributes = $swatchData["jsonSwatchConfig"];      
+    $swatchAttributes = $swatchData["jsonSwatchConfig"];
+    $mediaUrl = $swatchData["mediaCallback"];
 ?>
 <?php /*
     <script type="text/x-magento-init">
@@ -72,51 +73,75 @@ $configurableImagesData = [];
 foreach ($configurableImages as $productId => $images) {
     $configurableImagesData[$productId] = $images;
 }
-
+$lockBlock = $block->getLayout()->getBlock('header');
+$lock = $lockBlock->getData('print') ?? false;
+if (!$lock) {
 ?>
 <script>
 var confGallery = <?=json_encode($configurableImagesData)?>;
 var catImage = '<?=htmlspecialchars($catImage)?>';
 
-// Function to load gallery images via AJAX
-function loadGalleryImages(productId) {
-    if (confGallery[productId]) {
-        const images = confGallery[productId];
-        let galleryHtml = '<div class="gallery" id="product-gallery"><div class="m-img" id="m-img">';
-        
-        // Find and add main image
-        images.forEach(function(image) {
-            if (image.isMain) {
-                galleryHtml += '<img src="' + image.img + '" src-full="' + image.full + '" alt="' + image.caption + '" id="mImg" width="700px" height="700px">';
-            }
-        });
-        
-        galleryHtml += '</div><div class="thmb">';
-        
-        // Add thumbnails
-        images.forEach(function(image) {
-            galleryHtml += '<img src="' + image.thumb + '" loading="lazy" src-full="' + image.full + '" alt="' + image.caption + '" class="thumb" onclick="document.getElementById(\'mImg\').src=\'' + image.img + '\'; document.getElementById(\'mImg\').setAttribute(\'src-full\', \'' + image.full + '\');">';
-        });
-        
-        galleryHtml += '</div></div>';
-        
-        // Update the gallery container
-        const galleryContainer = document.querySelector('.gallery-container');
-        if (galleryContainer) {
-            galleryContainer.innerHTML = galleryHtml;
-        }
-    }
-}
+// Local cache for swatch images
+var swatchImageCache = {};
 
-// Load gallery if cat_image parameter is present
-if (catImage !== '') {
-    loadGalleryImages(catImage);
+// Function to load gallery images via AJAX
+function loadSwatchImages(variantProductId) {
+  var mediaUrl = "<?= $mediaUrl ?>?product_id=" + variantProductId + "&isAjax=true";
+  
+  // Get the clicked swatch and find its product image
+  var clickedSwatch = event.target;
+  var productImage = clickedSwatch.closest('[id^="product-item-info_"]').querySelector('img.product-image-photo');
+  
+  if (!productImage) {
+    console.error('Product image not found');
+    return;
+  }
+  
+  // Check if image is already cached
+  if (swatchImageCache[variantProductId]) {
+    // Apply loading effect for cached images too
+    productImage.style.opacity = '0.6';
+    productImage.src = swatchImageCache[variantProductId];
+    setTimeout(() => {
+      productImage.style.opacity = '1';
+    }, 150);
+    return;
+  }
+  
+  // Apply loading effect
+  productImage.style.opacity = '0.6';
+  productImage.style.transition = 'opacity 0.3s ease-in-out';
+  
+  fetch(mediaUrl)
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.medium) {
+        // Store in cache
+        swatchImageCache[variantProductId] = data.medium;
+        // Update image with fade effect
+        productImage.src = data.medium;
+        // Fade in the new image
+        setTimeout(() => {
+          productImage.style.opacity = '1';
+        }, 100);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      // Restore opacity on error
+      productImage.style.opacity = '1';
+    });
 }
+<?php 
+$lockBlock->setData('print', true);
+}
+?>
+
 </script>
 
 <div class="swatch-opt" data-role="swatch-options"></div>
 
-<a href="<?=$product->getProductUrl()?>">
+<!--<a href="<?=$product->getProductUrl()?>">-->
 <div class="product-options-wrapper" id="product-options-wrapper">
         <div class="fieldset" tabindex="0">
             <div class="swatch-opt" data-role="swatch-options" data-rendered="true">
@@ -134,18 +159,43 @@ if (catImage !== '') {
                             <div class="swatch-attribute-options clearfix">
                                 <?php foreach ($swatchAttributes[$attributeId] as $optionId => $optionData): ?>
                                     <?php if (!is_array($optionData) || !isset($optionData['type'])) {
-    continue;
-}
-?>
+                                    continue;
+                                }
+                                $swatchType = $optionData['type'] == 1 ? 'color' : 'text';
+                                if ($swatchType == 'text') : ?>
+                                <a href="<?=$product->getProductUrl()?>">
+                                <?php endif; ?>
 
-                                    <div class="swatch-option <?=$optionData['type'] == 1 ? 'color' : 'text'?>"
+                                    <div class="swatch-option <?=$swatchType?>"
                                          data-option-type="<?=$escaper->escapeHtmlAttr($optionData['type'])?>"
                                          data-option-id="<?=$escaper->escapeHtmlAttr($optionId)?>"
                                          data-option-gallery-id="<?=$escaper->escapeHtmlAttr($optionToImage[$optionId])?>"
                                          data-option-label="<?=$escaper->escapeHtmlAttr($optionData['label'] ?? '')?>"
-                                         style="<?=$optionData['type'] == 1 ? 'background:' . $escaper->escapeHtmlAttr($optionData['value']) . ' no-repeat center;' : ''?>">
-                                        <?=$optionData['type'] == 0 ? $escaper->escapeHtml($optionData['value']) : ''?>
+                                         <?php if ($swatchType == 'color'): ?>
+                                            <?php 
+                                            $options = $swatchConfig['attributes'][$attributeId];
+                                            
+                                            // Transpose options array to be indexed by option id
+                                            $transposedOptions = [];
+                                            if (isset($options['options']) && is_array($options['options'])) {
+                                                foreach ($options['options'] as $option) {
+                                                    if (isset($option['id'])) {
+                                                        $transposedOptions[$option['id']] = $option;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Now $transposedOptions is indexed by option id
+                                            // Example: $transposedOptions[57] contains all data for Purple option
+                                            ?>
+                                            onclick="loadSwatchImages(<?=isset($transposedOptions[$optionId]['products'][0]) ? $transposedOptions[$optionId]['products'][0] : 'null'?>)"
+                                         <?php endif;?>
+                                         style="<?=$swatchType == 'color' ? 'background:' . $escaper->escapeHtmlAttr($optionData['value']) . ' no-repeat center;' : ''?>">
+                                        <?=$swatchType == 'text' ? $escaper->escapeHtml($optionData['value']) : ''?>
                                     </div>
+                                <?php if ($swatchType == 'text'): ?>
+                                </a>
+                                <?php endif; ?>
                                 <?php endforeach; ?>
                             </div>
                             <input class="swatch-input super-attribute-select" name="super_attribute[<?=$attributeId?>]" type="text" value="" data-selector="super_attribute[<?=$attributeId?>]" data-validate="{required: true}" aria-required="true">
@@ -155,5 +205,5 @@ if (catImage !== '') {
             </div>
         </div>
     </div>
-</a>
+<!--</a>-->
 
