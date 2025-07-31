@@ -554,7 +554,7 @@ class ReactInjectPlugin extends Renderer
      */
     public function isMinifyEnabled(): bool
     {
-        return $this->template->isMinifyEnabled();
+        return $this->template->isMinifyEnabled() ?? true;
     }
 
     /*

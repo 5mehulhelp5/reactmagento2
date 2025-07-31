@@ -13,6 +13,7 @@ $height = (int) $block->getHeight();
 $paddingBottom = $block->getRatio() * 100;
 
 $globalBlock = $block->getLayout()->getBlock('header');
+$preloadImages = 2;
 if ($globalBlock) {
     $catImage = $globalBlock->getData('cat_image_counter') ?? 0;
     $catImage++;
@@ -30,7 +31,7 @@ $isHomePage = ($block->getFullActionName() === 'cms_index_index');
                 <?=$escaper->escapeHtmlAttr($name)?>="<?=$escaper->escapeHtml($value)?>"
             <?php endforeach; ?>
             src="<?=$escaper->escapeUrl($block->getImageUrl())?>"
-            <?php if ($catImage > 1 || $isProductPage || $isHomePage) { ?>
+            <?php if ($catImage > $preloadImages || $isProductPage || $isHomePage) { ?>
             loading="lazy"
             fetchpriority="low"
             <?php } else { ?>
