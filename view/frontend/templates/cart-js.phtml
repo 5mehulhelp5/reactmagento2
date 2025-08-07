@@ -1,11 +1,12 @@
 <script>
+// Remove href from all showcart elements
+var showcartElements = document.querySelectorAll('.action.showcart');
+showcartElements.forEach(function(element) {
+    element.removeAttribute('href');
+});
+
 // Bare minimum cart functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Remove href from all showcart elements
-    var showcartElements = document.querySelectorAll('.action.showcart');
-    showcartElements.forEach(function(element) {
-        element.removeAttribute('href');
-    });
     
     // Listen for cart button clicks
     document.addEventListener('click', function(e) {
