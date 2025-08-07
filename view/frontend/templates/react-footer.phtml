@@ -22,3 +22,9 @@ if($this->removeAdobeJSJunk()) {
 }
 ?>
 <!-- inline js -->
+
+<?php
+if(!isset($_GET['js-junk']) || $_GET['js-junk'] !== 'false') {
+    include('cart-js.phtml');
+}
+?>

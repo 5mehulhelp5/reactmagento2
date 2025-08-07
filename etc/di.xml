@@ -5,6 +5,8 @@
     <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="React\React\Block\Product\Renderer\Configurable"/>
     <preference for="Magento\Catalog\Block\Product\ImageFactory" type="React\React\Block\Product\ImageFactory"/>
 
+    <preference for="Magento\Checkout\CustomerData\Cart" type="React\React\CustomerData\Cart" />
+
     <type name="Magento\Framework\App\Response\HttpInterface">
         <plugin name="remove_magento_init_scripts" type="React\React\RemoveMagentoInitScripts" />
     </type>

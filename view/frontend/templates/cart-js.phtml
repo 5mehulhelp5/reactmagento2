@@ -1,0 +1,105 @@
+<script>
+// Bare minimum cart functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove href from all showcart elements
+    var showcartElements = document.querySelectorAll('.action.showcart');
+    showcartElements.forEach(function(element) {
+        element.removeAttribute('href');
+    });
+    
+    // Listen for cart button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.action.showcart')) {
+            e.preventDefault();
+            showCart();
+        }
+        
+        // Close cart on close button click
+        if (e.target.closest('#btn-minicart-close')) {
+            e.preventDefault();
+            hideCart();
+        }
+    });
+    
+    function showCart() {
+        // Check localStorage for Magento cache storage
+        var mageCacheStorage = {};
+        try {
+            var cachedData = localStorage.getItem('mage-cache-storage');
+            if (cachedData) {
+                mageCacheStorage = JSON.parse(cachedData);
+            }
+        } catch (e) {
+            console.log('No cached data found in localStorage');
+        }
+        
+        var cachedCartData = mageCacheStorage.cart;
+        
+        // Use cached data if available
+        if (cachedCartData && cachedCartData.html_cart) {
+            console.log('Cached cart data found in localStorage');
+            displayCart(cachedCartData);
+            return;
+        }
+        
+        // Fetch fresh cart data from server
+        fetch('/customer/section/load/?sections=cart')
+            .then(response => response.json())
+            .then(data => {
+                displayCart(data.cart);
+            })
+            .catch(error => {
+                console.error('Failed to load cart:', error);
+            });
+    }
+    
+    function displayCart(cartData) {
+        // Insert cart HTML into minicart content wrapper
+        var contentWrapper = document.getElementById('minicart-content-wrapper');
+        if (contentWrapper && cartData && cartData.html_cart) {
+            contentWrapper.innerHTML = cartData.html_cart;
+        }
+        
+        // Show the minicart block
+        var minicartBlock = document.querySelector('.block.block-minicart');
+        if (minicartBlock) {
+            minicartBlock.style.display = 'block';
+        }
+    }
+    
+    function hideCart() {
+        // Hide the minicart block
+        var minicartBlock = document.querySelector('.block.block-minicart');
+        if (minicartBlock) {
+            minicartBlock.style.display = 'none';
+        }
+    }
+    
+});
+</script>
+<style>
+.minicart-items .action.edit:before {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 18px;
+    line-height: 20px;
+    color: #757575;
+    content: '\e601';
+    font-family: 'luma-icons';
+    vertical-align: middle;
+    display: inline-block;
+    font-weight: normal;
+    overflow: hidden;
+    speak: none;
+    text-align: center;
+} 
+
+#mini-cart div.product.actions div.primary span {
+    display: none;
+}
+
+#minicart-content-wrapper span.count {
+    margin-right: 5px;
+}
+
+</style>
