@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (e.target.closest('.action.showcart')) {
             e.preventDefault();
-            showCart();
+            toggleCart();
         }
         
         // Close cart on close button click
@@ -20,6 +20,17 @@ document.addEventListener('DOMContentLoaded', function() {
             hideCart();
         }
     });
+    
+    function toggleCart() {
+        var minicartBlock = document.querySelector('.block.block-minicart');
+        if (minicartBlock && minicartBlock.style.display === 'block') {
+            // Cart is open, close it
+            hideCart();
+        } else {
+            // Cart is closed, open it
+            showCart();
+        }
+    }
     
     function showCart() {
         // Check localStorage for Magento cache storage
@@ -74,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
             minicartBlock.style.display = 'none';
         }
     }
-    
+
 });
 </script>
 <style>
