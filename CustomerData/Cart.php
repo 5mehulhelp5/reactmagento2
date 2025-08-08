@@ -69,7 +69,7 @@ class Cart extends MagentoCart implements SectionSourceInterface
 
             <div class="actions">
                 <div class="primary">
-                    <button id="top-cart-btn-checkout" type="button" class="action primary checkout" data-action="close" onclick="window.location.href=\'/checkout/\'" title="Proceed to Checkout">Proceed to Checkout</button>
+                    <button id="top-cart-btn-checkout" type="button" class="action primary checkout" data-action="close" title="Proceed to Checkout">Proceed to Checkout</button>
                 </div>
             </div>
 

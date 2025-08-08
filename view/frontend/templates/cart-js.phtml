@@ -89,6 +89,166 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+<script>
+  // --- config ---
+  const CHECKOUT_URL = '/checkout/';
+  const TIMEOUT = 2000;
+
+  // Feature detect Speculation Rules
+  const supportsSpeculation =
+    typeof HTMLScriptElement?.supports === 'function' &&
+    HTMLScriptElement.supports('speculationrules');
+
+  function prerenderCheckout() {
+    if (!supportsSpeculation) return;
+    if (document.querySelector(`script[data-prerender="${CHECKOUT_URL}"]`)) return;
+
+    console.log('Creating speculation rules for checkout prerender');
+    const s = document.createElement('script');
+    s.type = 'speculationrules';
+    s.dataset.prerender = CHECKOUT_URL;
+    s.textContent = JSON.stringify({
+      prerender: [{ source: 'list', urls: [CHECKOUT_URL] }]
+    });
+    document.head.appendChild(s);
+  }
+
+  function createPreloader() {
+    const preloader = document.createElement('div');
+    preloader.id = 'checkout-preloader';
+    preloader.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 60, 60, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+      font-family: Arial, sans-serif;
+    `;
+    
+    preloader.innerHTML = `
+      <div class="spinner" style="
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      "></div>
+      <div class="message" style="
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      ">Preparing Checkout...</div>
+      <div class="submessage" id="loading-message" style="
+        font-size: 14px;
+        opacity: 0.8;
+        min-height: 20px;
+        text-align: center;
+      ">Loading your cart and payment options</div>
+    `;
+    
+    // Add CSS animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes fadeInOut {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return preloader;
+  }
+
+  function startLoadingMessages() {
+    const loadingMessages = [
+      'Loading your cart and payment options...',
+      'Calculating shipping costs...',
+      'Processing tax calculations...',
+      'Preparing payment methods...',
+      'Loading checkout form...',
+      'Setting up secure checkout...',
+      'Almost ready...'
+    ];
+    
+    let messageIndex = 0;
+    const messageElement = document.getElementById('loading-message');
+    
+    if (messageElement) {
+      const updateMessage = () => {
+        messageElement.style.animation = 'fadeInOut 0.5s ease-in-out';
+        messageElement.textContent = loadingMessages[messageIndex];
+        
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+        
+        // Schedule next message
+        setTimeout(updateMessage, TIMEOUT / (loadingMessages.length + 1));
+      };
+      
+      // Start the message cycle
+      updateMessage();
+    }
+  }
+
+  function showPreloader() {
+    const preloader = createPreloader();
+    document.body.appendChild(preloader);
+    console.log('Checkout preloader shown');
+    
+    // Start cycling through loading messages
+    startLoadingMessages();
+  }
+
+  function hidePreloader() {
+    const preloader = document.getElementById('checkout-preloader');
+    if (preloader) {
+      preloader.remove();
+      console.log('Checkout preloader hidden');
+    }
+  }
+
+  function handleCheckoutClick(e) {
+    if (e.target.closest('#top-cart-btn-checkout')) {
+      const el = e.target.closest('#top-cart-btn-checkout');
+      if (el.tagName === 'A') e.preventDefault();
+
+      // Ensure prerender is started (in case pointer down didn't fire)
+      prerenderCheckout();
+      
+      // Show preloader
+      showPreloader();
+      
+      console.log('Checkout clicked, waiting 5 seconds before navigation');
+      setTimeout(() => {
+        hidePreloader();
+        window.location.href = CHECKOUT_URL;
+      }, TIMEOUT);
+    }
+  }
+
+  // Start prerender as early as possible on press
+  function handlePointerDown(e) {
+    if (e.target.closest('#top-cart-btn-checkout')) prerenderCheckout();
+  }
+
+  // Use delegation so it works even if the button is injected later
+  document.addEventListener('pointerdown', handlePointerDown, true);
+  document.addEventListener('click', handleCheckoutClick, true);
+
+</script>
+
 <style>
 .minicart-items .action.edit:before {
     -webkit-font-smoothing: antialiased;
