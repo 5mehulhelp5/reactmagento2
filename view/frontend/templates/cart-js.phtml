@@ -230,7 +230,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Show preloader
       showPreloader();
       
-      console.log('Checkout clicked, waiting 5 seconds before navigation');
       setTimeout(() => {
         hidePreloader();
         window.location.href = CHECKOUT_URL;
@@ -241,6 +240,76 @@ document.addEventListener('DOMContentLoaded', function() {
   // Start prerender as early as possible on press
   function handlePointerDown(e) {
     if (e.target.closest('#top-cart-btn-checkout')) prerenderCheckout();
+  }
+
+  function navigationClicks() {
+    // Find the navigation menu
+    const navigationMenu = document.querySelector('.navigation');
+    
+    if (navigationMenu) {
+      // Set all submenus to display: none by default
+      const allSubmenus = navigationMenu.querySelectorAll('.submenu');
+      allSubmenus.forEach(function(submenu) {
+        submenu.style.display = 'none';
+      });
+      
+      // Add click listener directly to the navigation menu
+      navigationMenu.addEventListener('click', function(e) {
+        const clickedElement = e.target;
+        const levelTopLink = clickedElement.closest('.level-top');
+        
+        if (levelTopLink) {
+          const href = levelTopLink.getAttribute('href');
+          const menuItem = levelTopLink.closest('li');
+          const submenu = menuItem ? menuItem.querySelector('.submenu') : null;
+          
+          // Check if click is on the <span> element first
+          if (clickedElement.tagName === 'SPAN' && clickedElement.closest('.level-top') && href) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = href;
+            return false;
+          }
+          
+                      // If click is on the <a> element itself (not on span), prevent navigation and toggle submenu
+            if (clickedElement === levelTopLink && href && clickedElement.tagName === 'A') {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              // Toggle submenu visibility
+              if (submenu) {
+                const isVisible = submenu.style.display !== 'none' && submenu.offsetParent !== null;
+                if (isVisible) {
+                  // Hide this submenu
+                  submenu.style.display = 'none';
+                } else {
+                  // Close all other submenus first
+                  const allSubmenus = navigationMenu.querySelectorAll('.submenu');
+                  allSubmenus.forEach(function(otherSubmenu) {
+                    if (otherSubmenu !== submenu) {
+                      otherSubmenu.style.display = 'none';
+                    }
+                  });
+                  
+                  // Show this submenu
+                  submenu.style.display = 'block';
+                }
+              }
+              
+              return false;
+            }
+        }
+      }, true); // Use capture phase to intercept before other handlers
+          } else {
+      console.log('Navigation menu not found');
+    }
+  }
+
+  // Apply the navigation fix when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', navigationClicks);
+  } else {
+    navigationClicks();
   }
 
   // Use delegation so it works even if the button is injected later

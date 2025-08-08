@@ -19,10 +19,28 @@ if($this->removeAdobeJSJunk()) {
     } else {
         echo $this->getInlineJs('react-core.js');
     }
+} else {
+?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.querySelector(".action.nav-toggle");
+        const navMenu = document.querySelector(".nav-sections");
+        // Toggle menu on click
+        navToggle.addEventListener("click", function () {
+            navMenu.classList.toggle("active");
+        });
+        // Close menu when clicking outside
+        document.addEventListener("click", function (event) {
+            if (!navMenu.contains(event.target) && event.target !== navToggle) {
+                navMenu.classList.remove("active");
+        }
+        });
+    });
+</script>
+<?php
 }
 ?>
 <!-- inline js -->
-
 <?php
 if(!isset($_GET['js-junk']) || $_GET['js-junk'] !== 'false') {
     include('cart-js.phtml');
