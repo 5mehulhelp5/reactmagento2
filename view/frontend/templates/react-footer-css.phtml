@@ -11,12 +11,6 @@ $product = $this->registry->registry('current_product');
     clear: both;
     padding-top: 0;
 }
-/* Show only the first-level submenu on hover */
-.navigation .level0:hover > .submenu {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-}
 
 /* Ensure deeper levels remain hidden */
 .navigation .level0 .submenu .submenu {
@@ -32,7 +26,19 @@ $product = $this->registry->registry('current_product');
     .navigation .level0 .submenu .submenu {
         display: block !important;
     }
+    /* Navigation submenu toggle CSS - Global styles */
+    .navigation .level0.level-top.parent > ul.level0.submenu{
+        display: none;
+        transition: all 0.3s ease-in-out;
+    }
+    .navigation .level0.level-top.active.parent > ul.level0.submenu {
+        display: block !important;
+        transition: all 0.3s ease-in-out;
+    }
+
 }
+
+
 
 /* Pagination Container */
 .pages {
@@ -191,13 +197,17 @@ display: none;
         speak: none;
         text-align: center;
     }
-}
-
-@media screen and (min-width: 768px) {
+    /* Show only the first-level submenu on hover */
+    .navigation .level0:hover > .submenu {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+    }
     .navigation .level0.parent>.level-top>.ui-menu-icon:after {
         display:none;
     }
 }
+
 
 /* General Message Styling */
 .page.message {
@@ -269,11 +279,6 @@ display: none;
     .price-box.price-final_price {
         margin-bottom: 10px;
     }
-}
-
-.submenu {
-    display: none;
-    transition: all 0.3s ease-in-out;
 }
 
 .minicart-wrapper .action.showcart .counter.qty.empty {

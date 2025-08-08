@@ -246,13 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Find the navigation menu
     const navigationMenu = document.querySelector('.navigation');
     
-    if (navigationMenu) {
-      // Set all submenus to display: none by default
-      const allSubmenus = navigationMenu.querySelectorAll('.submenu');
-      allSubmenus.forEach(function(submenu) {
-        submenu.style.display = 'none';
-      });
-      
+    if (navigationMenu) {   
       // Add click listener directly to the navigation menu
       navigationMenu.addEventListener('click', function(e) {
         const clickedElement = e.target;
@@ -271,31 +265,36 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
           }
           
-                      // If click is on the <a> element itself (not on span), prevent navigation and toggle submenu
+            // If click is on the <a> element itself (not on span), prevent navigation and toggle submenu
             if (clickedElement === levelTopLink && href && clickedElement.tagName === 'A') {
               e.preventDefault();
               e.stopPropagation();
               
-              // Toggle submenu visibility
-              if (submenu) {
-                const isVisible = submenu.style.display !== 'none' && submenu.offsetParent !== null;
+                          // Toggle submenu visibility
+            if (submenu) {
+                const isVisible = clickedElement.classList.contains('active');
                 if (isVisible) {
                   // Hide this submenu
+                  clickedElement.classList.remove('active');
                   submenu.style.display = 'none';
                 } else {
                   // Close all other submenus first
                   const allSubmenus = navigationMenu.querySelectorAll('.submenu');
                   allSubmenus.forEach(function(otherSubmenu) {
                     if (otherSubmenu !== submenu) {
-                      otherSubmenu.style.display = 'none';
+                      // Remove active class from parent elements of other submenus
+                      const parentLink = otherSubmenu.closest('li').querySelector('.level-top');
+                      if (parentLink) {
+                        parentLink.classList.remove('active');
+                        submenu.style.display = 'none';
+                      }
                     }
                   });
-                  
                   // Show this submenu
+                  clickedElement.classList.add('active');
                   submenu.style.display = 'block';
                 }
-              }
-              
+            }
               return false;
             }
         }
@@ -311,6 +310,18 @@ document.addEventListener('DOMContentLoaded', function() {
   } else {
     navigationClicks();
   }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const navigationMenu = document.querySelector('.navigation');
+    
+    if (navigationMenu) {
+      // Set all submenus to display: none by default
+      const allSubmenus = navigationMenu.querySelectorAll('.submenu');
+      allSubmenus.forEach(function(submenu) {
+        submenu.style.display = 'none';
+      });
+    }
+});
 
   // Use delegation so it works even if the button is injected later
   document.addEventListener('pointerdown', handlePointerDown, true);
