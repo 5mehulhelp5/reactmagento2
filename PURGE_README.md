@@ -1,4 +1,4 @@
-# CSS Purge Tool
+# CSS Purge a React-Luma Tool for Magento and another platforms 
 
 A powerful Node.js tool for purging unused CSS using PurgeCSS, with support for URL fetching, local content scanning, and advanced configuration options.
 
