@@ -38,7 +38,22 @@ $product = $this->registry->registry('current_product');
 
 }
 
+/* Replace "Remove This Item" text with X symbol */
+a.action.remove span {
+    font-size: 0;
+}
 
+a.action.remove span:after {
+    content: "✕";
+    font-size: 16px;
+    font-weight: bold;
+    color: #666;
+    display: inline-block;
+}
+
+a.action.remove:hover span:after {
+    color: #ff0000;
+}
 
 /* Pagination Container */
 .pages {
