@@ -164,5 +164,79 @@ a.product-item-link {
 .products.wrapper.products-grid div#product-options-wrapper {
     min-height: 100%;
 }
+
+/* Accessibility Fix for Customer Menu */
+.customer-welcome .customer-name {
+    cursor: pointer;
+    outline: none;
+}
+.customer-welcome .customer-name:focus {
+    outline: 2px solid #007bdb;
+    outline-offset: 2px;
+}
+.customer-welcome .customer-menu[aria-hidden="true"] {
+    display: none !important;
+}
+.customer-welcome .customer-menu[aria-hidden="false"] {
+    display: block !important;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    min-width: 200px;
+    z-index: 1000;
+}
+.customer-welcome .customer-menu a:focus {
+    outline: 2px solid #007bdb;
+    outline-offset: -2px;
+}
+
+/* Accessibility Fix for Contrast Issues */
+/* Fix pagination contrast */
+.pages .pages-items .item .page,
+.pages .pages-items .item a.action.next,
+.pages .pages-items .item a.action.previous,
+.pages .pages-items .item span {
+    color: #333333 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cccccc !important;
+    font-weight: 500 !important;
+}
+
+.pages .pages-items .item .page:hover,
+.pages .pages-items .item a.action.next:hover,
+.pages .pages-items .item a.action.previous:hover {
+    color: #ffffff !important;
+    background-color: #007bdb !important;
+    border-color: #007bdb !important;
+}
+
+.pages .pages-items .item .page.current {
+    color: #ffffff !important;
+    background-color: #333333 !important;
+    border-color: #333333 !important;
+}
+
+/* SEO: Mark action links as non-crawlable */
+a.action[rel="nofollow"],
+a.action[data-noindex="true"] {
+    /* These links are marked with rel="nofollow" to prevent crawling */
+}
+
+/* Accessibility Fix: Ensure customer-menu visibility matches aria-hidden */
+.customer-menu[aria-hidden="true"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+.customer-menu[aria-hidden="false"] {
+    display: block !important;
+    visibility: visible !important;
+}
+.customer-menu[role="menu"] a[tabindex="-1"] {
+    /* Links with tabindex="-1" are not focusable when menu is hidden */
+}
+
 </style>
 <!-- CSS Header End -->

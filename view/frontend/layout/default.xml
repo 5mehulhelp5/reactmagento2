@@ -35,5 +35,14 @@
             </block>
         </referenceBlock>
         <referenceBlock name="store.links" remove="true" />
+        <referenceBlock name="logo">
+            <arguments>
+                <argument name="template" xsi:type="string">React_React::html/header/logo.phtml</argument>
+                <argument name="logo_file_name" xsi:type="string">images/logo.svg</argument>
+                <argument name="logo_alt" xsi:type="string">React-Luma</argument>
+                <argument name="logo_width" xsi:type="string">150</argument>
+                <argument name="logo_height" xsi:type="string">50</argument>
+            </arguments>
+        </referenceBlock>
     </body>
 </page>
