@@ -507,6 +507,7 @@ describe('ReactInjectPlugin - Page Type Detection Tests', function () {
         expect($result)->toBeArray();
         expect($result['isProduct'])->toBeFalse();
         expect($result['isCategory'])->toBeFalse();
+        expect($result['isHome'])->toBeTrue();
         
     });
 });
@@ -1035,6 +1036,42 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         
     });
     
+    test('home page CSS paths are generated correctly', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Initialize asset variables
+        $helper->callMethod('initializeAssetVariables');
+        
+        // Simulate processMobileCSS for home page
+        $requestContext = [
+            'actionName' => 'cms_index_index',
+            'removeController' => true,
+        ];
+        $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+        $baseURL = 'http://localhost/pub/static/';
+        
+        // Create mock asset
+        $mockAsset = new class {
+            public function getUrl() {
+                return 'http://localhost/pub/static/styles-m.css';
+            }
+        };
+        
+        $assets = [0 => $mockAsset];
+        $key = 0;
+        
+        // Call processMobileCSS - this will set up the CSS paths
+        $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+        
+        $assetVars = $helper->getProperty('assetVariables');
+        
+        // CSS files may be minified (.min.css) or not (.css) depending on config
+        expect($assetVars['optimisedHomeCSSFileUrl'])->toContain('home-styles-m')
+            ->and($assetVars['optimisedHomeCSSFileCriticalUrl'])->toContain('home-critical-m')
+            ->and($assetVars['optimisedHomeCSSFileCriticalPath'])->toContain('home-critical-m.css');
+        
+    });
+    
     test('product page HTML includes critical CSS when file exists', function () {
         $helper = new ReactInjectPluginTestHelper();
         
@@ -1087,14 +1124,17 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
             'optimisedCategoryCSSFileCriticalUrl' => 'http://localhost/pub/static/category-critical-m.css',
             'assetOptimized' => false,
             'assetProductOptimized' => false,
+            'assetHomeOptimized' => false,
             'assetOptimizedLarge' => false,
             'assetNotOptimisedMobile' => false,
             'assetNotOptimisedLarge' => false,
             'optimisedProductCSSFileCriticalPath' => false,
             'optimisedProductCSSFileCriticalUrl' => '',
+            'optimisedHomeCSSFileCriticalPath' => false,
+            'optimisedHomeCSSFileCriticalUrl' => '',
         ]);
         
-        $pageTypes = ['isProduct' => false, 'isCategory' => true];
+        $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false];
         $result = '';
         
         // Test addCategoryCSSLinks
@@ -1104,6 +1144,39 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         
         $assetVars = $helper->getProperty('assetVariables');
         expect($assetVars['optimisedCategoryCSSFileCriticalUrl'])->toContain('category-critical-m.css');
+        
+    });
+    
+    test('home page HTML includes critical CSS when file exists', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Set up asset variables as if home CSS files exist
+        $helper->setProperty('assetVariables', [
+            'assetHomeOptimized' => 'http://localhost/pub/static/home-styles-m.css',
+            'optimisedHomeCSSFileCriticalPath' => BP . '/pub/static/home-critical-m.css',
+            'optimisedHomeCSSFileCriticalUrl' => 'http://localhost/pub/static/home-critical-m.css',
+            'assetOptimized' => false,
+            'assetProductOptimized' => false,
+            'assetCategoryOptimized' => false,
+            'assetOptimizedLarge' => false,
+            'assetNotOptimisedMobile' => false,
+            'assetNotOptimisedLarge' => false,
+            'optimisedProductCSSFileCriticalPath' => false,
+            'optimisedProductCSSFileCriticalUrl' => '',
+            'optimisedCategoryCSSFileCriticalPath' => false,
+            'optimisedCategoryCSSFileCriticalUrl' => '',
+        ]);
+        
+        $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+        $result = '';
+        
+        // Test addHomePageCSSLinks
+        $result = $helper->callMethod('addHomePageCSSLinks', $result, $pageTypes);
+        
+        expect($result)->toBeString();
+        
+        $assetVars = $helper->getProperty('assetVariables');
+        expect($assetVars['optimisedHomeCSSFileCriticalUrl'])->toContain('home-critical-m.css');
         
     });
     
@@ -1138,7 +1211,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         
     });
     
-    test('non-product/category pages use general optimized CSS', function () {
+    test('non-product/category/home pages use general optimized CSS', function () {
         $helper = new ReactInjectPluginTestHelper();
         
         // Set up asset variables for general CSS (not page-specific)
@@ -1146,23 +1219,65 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
             'assetOptimized' => 'http://localhost/pub/static/styles-m.css',
             'assetProductOptimized' => false,
             'assetCategoryOptimized' => false,
+            'assetHomeOptimized' => false,
             'assetOptimizedLarge' => false,
             'assetNotOptimisedMobile' => false,
             'assetNotOptimisedLarge' => false,
             'optimisedProductCSSFileCriticalPath' => false,
             'optimisedCategoryCSSFileCriticalPath' => false,
+            'optimisedHomeCSSFileCriticalPath' => false,
             'optimisedProductCSSFileCriticalUrl' => '',
             'optimisedCategoryCSSFileCriticalUrl' => '',
+            'optimisedHomeCSSFileCriticalUrl' => '',
         ]);
         
-        $pageTypes = ['isProduct' => false, 'isCategory' => false];
+        $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => false];
         $result = '';
         
-        // Test addOptimizedCSSLinks for non-product/category page
+        // Test addOptimizedCSSLinks for non-product/category/home page
         $result = $helper->callMethod('addOptimizedCSSLinks', $result, $pageTypes);
         
         // Should contain general CSS, not page-specific
         expect($result)->toContain('styles-m.css')
+            ->and($result)->not->toContain('product-styles-m.css')
+            ->and($result)->not->toContain('category-styles-m.css')
+            ->and($result)->not->toContain('home-styles-m.css');
+        
+    });
+    
+    test('home page adds specific CSS links', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Set up asset variables for home page CSS
+        // Set critical path to false so checkFile will fail and it uses the else branch
+        $helper->setProperty('assetVariables', [
+            'assetHomeOptimized' => 'http://localhost/pub/static/home-styles-m.css',
+            'optimisedHomeCSSFileCriticalPath' => false, // File doesn't exist, so use else branch
+            'optimisedHomeCSSFileCriticalUrl' => 'http://localhost/pub/static/home-critical-m.css',
+            'assetOptimized' => false,
+            'assetProductOptimized' => false,
+            'assetCategoryOptimized' => false,
+            'assetHomeOptimized' => 'http://localhost/pub/static/home-styles-m.css',
+            'assetOptimizedLarge' => false,
+            'assetNotOptimisedMobile' => false,
+            'assetNotOptimisedLarge' => false,
+            'optimisedProductCSSFileCriticalPath' => false,
+            'optimisedCategoryCSSFileCriticalPath' => false,
+            'optimisedHomeCSSFileCriticalPath' => false,
+            'optimisedProductCSSFileCriticalUrl' => '',
+            'optimisedCategoryCSSFileCriticalUrl' => '',
+            'optimisedHomeCSSFileCriticalUrl' => '',
+        ]);
+        
+        $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+        $result = '';
+        
+        // Test addOptimizedCSSLinks for home page
+        $result = $helper->callMethod('addOptimizedCSSLinks', $result, $pageTypes);
+        
+        // Should contain home CSS, not general or other page-specific CSS
+        expect($result)->toContain('home-styles-m.css')
+            ->and($result)->not->toMatch('/href="[^"]*\/styles-m\.css"/') // General CSS (not home-styles-m.css)
             ->and($result)->not->toContain('product-styles-m.css')
             ->and($result)->not->toContain('category-styles-m.css');
         

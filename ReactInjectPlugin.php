@@ -183,12 +183,15 @@ class ReactInjectPlugin extends Renderer
             'assetOptimizedLarge' => false,
             'assetProductOptimized' => false,
             'assetCategoryOptimized' => false,
+            'assetHomeOptimized' => false,
             'assetNotOptimisedMobile' => false,
             'assetNotOptimisedLarge' => false,
             'optimisedProductCSSFileCriticalPath' => false,
             'optimisedCategoryCSSFileCriticalPath' => false,
+            'optimisedHomeCSSFileCriticalPath' => false,
             'optimisedProductCSSFileCriticalUrl' => '',
-            'optimisedCategoryCSSFileCriticalUrl' => ''
+            'optimisedCategoryCSSFileCriticalUrl' => '',
+            'optimisedHomeCSSFileCriticalUrl' => ''
         ];
     }
 
@@ -199,7 +202,8 @@ class ReactInjectPlugin extends Renderer
     {
         return [
             'isProduct' => in_array($actionName, ['catalog_product_view']),
-            'isCategory' => in_array($actionName, ['catalog_category_view', 'catalogsearch_result_index'])
+            'isCategory' => in_array($actionName, ['catalog_category_view', 'catalogsearch_result_index']),
+            'isHome' => in_array($actionName, ['cms_index_index'])
         ];
     }
 
@@ -244,11 +248,18 @@ class ReactInjectPlugin extends Renderer
             $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css';
             $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = BP . '/pub/static/category-critical-m.css';
 
+            $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . 'home-styles-m.css';
+            $optimisedHomeCSSFilePath = BP . '/pub/static/home-styles-m.css';
+            $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . 'home-critical-m.css';
+            $this->assetVariables['optimisedHomeCSSFileCriticalPath'] = BP . '/pub/static/home-critical-m.css';
+
             if ($this->isMinifyEnabled()) {
                 $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.min.css';
                 $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.min.css';
                 $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.min.css';
                 $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.min.css';
+                $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . 'home-styles-m.min.css';
+                $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . 'home-critical-m.min.css';
             }
 
             // Check and set optimized assets
@@ -262,6 +273,10 @@ class ReactInjectPlugin extends Renderer
             }
             if ($this->checkFile($optimisedCategoryCSSFilePath) && $pageTypes['isCategory']) {
                 $this->assetVariables['assetCategoryOptimized'] = $this->assetVariables['optimisedCategoryCSSFileUrl'];
+                unset($assets[$key]);
+            }
+            if ($this->checkFile($optimisedHomeCSSFilePath) && $pageTypes['isHome']) {
+                $this->assetVariables['assetHomeOptimized'] = $this->assetVariables['optimisedHomeCSSFileUrl'];
                 unset($assets[$key]);
             }
         }
@@ -442,7 +457,7 @@ class ReactInjectPlugin extends Renderer
     private function addOptimizedCSSLinks(string $result, array $pageTypes): string
     {
         // Mobile CSS
-        if ($this->assetVariables['assetOptimized'] && !($this->assetVariables['assetProductOptimized'] || $this->assetVariables['assetCategoryOptimized'])) {
+        if ($this->assetVariables['assetOptimized'] && !($this->assetVariables['assetProductOptimized'] || $this->assetVariables['assetCategoryOptimized'] || $this->assetVariables['assetHomeOptimized'])) {
             $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetOptimized'] . '" />' . "\n" . $result;
         }
 
@@ -455,6 +470,9 @@ class ReactInjectPlugin extends Renderer
 
         // Category CSS
         $result = $this->addCategoryCSSLinks($result, $pageTypes);
+
+        // Home CSS
+        $result = $this->addHomePageCSSLinks($result, $pageTypes);
 
         return $result;
     }
@@ -503,6 +521,33 @@ class ReactInjectPlugin extends Renderer
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '" />' . "\n" . $result;
                 if (!empty($this->assetVariables['assetNotOptimisedLarge'])) {
                     $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '" />' . "\n" . $result;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Add home page CSS links
+     */
+    private function addHomePageCSSLinks(string $result, array $pageTypes): string
+    {
+        if ($this->assetVariables['assetHomeOptimized'] && $pageTypes['isHome']) {
+            if ($this->assetVariables['optimisedHomeCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedHomeCSSFileCriticalPath'])) {
+                if (!$this->configuration['criticalCSSHTML']) {
+                    @header('Link: <' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '>; rel=preload; as=style', false);
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '" />' . "\n" . $result;
+                }
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetHomeOptimized'] . '" />' . "\n" . $result;
+            } else {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetHomeOptimized'] . '" />' . "\n" . $result;
+            }
+        } elseif (!$this->assetVariables['assetHomeOptimized'] && $pageTypes['isHome']) {
+            if ($this->assetVariables['optimisedHomeCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedHomeCSSFileCriticalPath'])) {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '" />' . "\n" . $result;
+                if (!empty($this->assetVariables['assetNotOptimisedMobile'])) {
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '" />' . "\n" . $result;
                 }
             }
         }
