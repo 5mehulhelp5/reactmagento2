@@ -1,0 +1,41 @@
+{
+    "name": "genaker/react-luma",
+    "description": "",
+    "type": "magento2-module",
+    "license": "proprietary",
+    "authors": [
+        {
+            "email": "egorshitikov@gmail.com",
+            "name": "Yegor Shytikov"
+        },
+        {
+            "email": "sh.kiruh@gmail.com",
+            "name": "Kirill Shytikov"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {},
+    "require-dev": {
+        "pestphp/pest": "^2.36",
+        "pestphp/pest-plugin-mock": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "React\\React\\": "../"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "React\\React\\Tests\\": "./"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "test:coverage": "pest --coverage"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

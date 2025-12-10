@@ -1,0 +1,133 @@
+{
+  "styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link",
+        "https://react-luma.cnxt.link/men/bottoms-men/pants-men.html"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_1.html",
+        "content/react_luma_cnxt_link_2.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*"
+      ]
+    }
+  },
+  "styles-l.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_1.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*"
+      ]
+    }
+  },
+  "product-styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link",
+        "https://react-luma.cnxt.link/men/bottoms-men/pants-men.html"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_1.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "product-item",
+        "product-image"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".product-debug-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".product-old-*"
+      ]
+    }
+  },
+  "category-styles-m.min.css": {
+    "content": {
+      "urls": [
+        "https://react-luma.cnxt.link/men/bottoms-men/pants-men.html"
+      ],
+      "paths": [
+        "content/react_luma_cnxt_link_2.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head",
+        "script",
+        "style",
+        "category-page",
+        "product-grid"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*",
+        ".temp-*",
+        ".unused-*",
+        ".category-debug-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".old-*",
+        ".legacy-*",
+        ".vendor-prefix-*",
+        ".category-old-*"
+      ]
+    }
+  }
+} 

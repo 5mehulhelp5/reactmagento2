@@ -78,7 +78,7 @@ class ReactInjectPlugin extends Renderer
      */
     protected function renderAssetHtml(\Magento\Framework\View\Asset\PropertyGroup $group)
     {
-        @header('x-built-with: Ract-Luma', false);
+        @header('x-built-with: React-Luma', false);
         $startTime = microtime(true);
 
         $this->objectManager = ObjectManager::getInstance();
@@ -89,7 +89,7 @@ class ReactInjectPlugin extends Renderer
         // Process assets
         $assets = $this->processMerge($group->getAll(), $group);
         $attributes = $this->getGroupAttributes($group);
-        $type = $group->getProperties()['content_type'];
+        $type = $group->getProperties()['content_type'] ?? 'css';
 
         // Initialize asset variables
         $this->initializeAssetVariables();
@@ -156,11 +156,11 @@ class ReactInjectPlugin extends Renderer
         $area = $this->state->getAreaCode();
         $request = $this->objectManager->get(\Magento\Framework\App\Request\Http::class);
         $actionName = $request->getFullActionName();
-        $requestURL = $_SERVER['REQUEST_URI'];
+        $requestURL = $_SERVER['REQUEST_URI'] ?? '';
 
         @header("Action-Name: $actionName");
 
-        $removeProtection = boolval(boolval(strpos($requestURL, 'checkout')) || boolval(strpos($requestURL, 'customer')) || $area === 'adminhtml');
+        $removeProtection = boolval(strpos($requestURL, 'checkout') !== false || strpos($requestURL, 'customer') !== false || $area === 'adminhtml');
         @header("React-Protection: $removeProtection");
 
         $removeController = in_array($actionName, $this->actionFilter);
@@ -332,13 +332,15 @@ class ReactInjectPlugin extends Renderer
     private function processReactVueAssets(array $assets, array $requestContext): array
     {
         foreach ($assets as $key => $asset) {
-            if (strpos($asset->getUrl(), 'js/react')) {
+            $url = $asset->getUrl();
+            if (strpos($url, 'js/react')) {
                 unset($assets[$key]);
                 if ($this->configuration['reactEnabled']) {
                     array_unshift($assets, $asset);
                 }
+                continue; // Skip vue check if already processed as react
             }
-            if (strpos($asset->getUrl(), 'vue')) {
+            if (strpos($url, 'vue')) {
                 unset($assets[$key]);
                 if ($this->configuration['vueEnabled']) {
                     array_unshift($assets, $asset);
@@ -358,9 +360,13 @@ class ReactInjectPlugin extends Renderer
             if (strpos($asset->getUrl(), 'require')) {
                 if ($this->configuration['removeAdobeJSJunk']) {
                     unset($assets[$key]);
-                }
-
-                if (!$this->configuration['removeAdobeJSJunk'] || !in_array($requestContext['actionName'], $this->actionFilter)) {
+                    // If removing junk AND action is in filter, don't add it back
+                    if (!in_array($requestContext['actionName'], $this->actionFilter)) {
+                        array_unshift($assets, $asset);
+                    }
+                } else {
+                    // If not removing junk, ensure it's at the front
+                    unset($assets[$key]);
                     array_unshift($assets, $asset);
                 }
             }
@@ -374,17 +380,24 @@ class ReactInjectPlugin extends Renderer
      */
     private function reorderAssets(array $assets, array $requestContext): array
     {
-        // Execute one more time to make scripts the same order
-        foreach ($assets as $key => $asset) {
-            if (strpos($asset->getUrl(), 'require') && $this->configuration['removeAdobeJSJunk']) {
-                unset($assets[$key]);
-                array_unshift($assets, $asset);
-            }
-        }
-
+        // Reorder RequireJS assets if they still exist (not removed by processRequireJSAssets)
         if ($this->configuration['removeAdobeJSJunk']) {
             foreach ($assets as $key => $asset) {
-                if (strpos($asset->getUrl(), 'js/react') || strpos($asset->getUrl(), 'vue')) {
+                $url = $asset->getUrl();
+                if (strpos($url, 'require') && in_array($requestContext['actionName'], $this->actionFilter)) {
+                    // RequireJS should be removed for filtered actions, skip it
+                    continue;
+                }
+                if (strpos($url, 'require')) {
+                    unset($assets[$key]);
+                    array_unshift($assets, $asset);
+                }
+            }
+
+            // Reorder React/Vue assets
+            foreach ($assets as $key => $asset) {
+                $url = $asset->getUrl();
+                if (strpos($url, 'js/react') || strpos($url, 'vue')) {
                     unset($assets[$key]);
                     array_unshift($assets, $asset);
                 }
@@ -461,10 +474,12 @@ class ReactInjectPlugin extends Renderer
             } else {
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
             }
-        } else if (!$this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
+        } elseif (!$this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
             if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '" />' . "\n" . $result;
+                if (!empty($this->assetVariables['assetNotOptimisedMobile'])) {
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '" />' . "\n" . $result;
+                }
             }
         }
 
@@ -483,10 +498,12 @@ class ReactInjectPlugin extends Renderer
             } else {
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetCategoryOptimized'] . '" />' . "\n" . $result;
             }
-        } else if (!$this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
+        } elseif (!$this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
             if ($this->assetVariables['optimisedCategoryCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath'])) {
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '" />' . "\n" . $result;
+                if (!empty($this->assetVariables['assetNotOptimisedLarge'])) {
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '" />' . "\n" . $result;
+                }
             }
         }
 
