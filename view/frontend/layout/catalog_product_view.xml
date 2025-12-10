@@ -8,5 +8,8 @@
                 <argument name="viewModel" xsi:type="object">Magento\Catalog\ViewModel\Product\Breadcrumbs</argument>
             </arguments>
         </referenceBlock>
+        <!-- Override product list items template for related/upsell/cross-sell products -->
+        <referenceBlock name="catalog.product.related" template="React_React::product/list/items.phtml"/>
+        <referenceBlock name="product.info.upsell" template="React_React::product/list/items.phtml"/>
     </body>
 </page>

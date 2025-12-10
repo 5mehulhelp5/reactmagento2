@@ -44,5 +44,9 @@
                 <argument name="logo_height" xsi:type="string">50</argument>
             </arguments>
         </referenceBlock>
+        <!-- Override wishlist sidebar template to remove Knockout.js -->
+        <referenceBlock name="wishlist_sidebar" template="React_React::sidebar.phtml"/>
+        <!-- Override compare sidebar template to remove Knockout.js -->
+        <referenceBlock name="catalog.compare.sidebar" template="React_React::product/compare/sidebar.phtml"/>
     </body>
 </page>

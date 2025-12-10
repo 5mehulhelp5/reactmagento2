@@ -17,7 +17,8 @@ $product = $block->getProduct()
     <?php /** @var ConfigurableViewModel $configurableViewModel */ ?>
     <?php $configurableViewModel = $block->getConfigurableViewModel() ?>
     <div class="swatch-opt-<?= $block->escapeHtmlAttr($productId) ?>"
-         data-role="swatch-option-<?= $block->escapeHtmlAttr($productId) ?>"></div>
+         data-role="swatch-option-<?= $block->escapeHtmlAttr($productId) ?>"
+         data-template-override="React_React::product/listing/renderer.phtml"></div>
     <?php
     $swatchData = [ "selectorProduct"=> ".product-item-details",
                     "onlySwatches" => true,
@@ -163,7 +164,14 @@ $lockBlock->setData('print', true);
                                 }
                                 $swatchType = $optionData['type'] == 1 ? 'color' : 'text';
                                 if ($swatchType == 'text') : ?>
-                                <a href="<?=$product->getProductUrl()?>">
+                                <?php 
+                                // Ensure product URL is always valid and crawlable
+                                $productUrl = $product->getProductUrl();
+                                if (empty($productUrl) || $productUrl === '#') {
+                                    $productUrl = $block->getUrl('catalog/product/view', ['id' => $product->getId()]);
+                                }
+                                ?>
+                                <a href="<?=$block->escapeUrl($productUrl)?>">
                                 <?php endif; ?>
 
                                     <div class="swatch-option <?=$swatchType?>"

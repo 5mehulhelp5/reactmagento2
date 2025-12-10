@@ -1,0 +1,174 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var \Magento\Wishlist\Block\Customer\Sidebar $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<?php
+$wishlstViewModel = $block->getData('wishlistDataViewModel');
+?>
+<?php if ($wishlstViewModel->isAllow()): ?>
+    <div class="block block-wishlist" id="wishlist-sidebar-container"></div>
+<?php endif ?>
+
+<script>
+(function(){
+    'use strict';
+    
+    // Render wishlist sidebar from localStorage
+    function renderWishlistSidebar(){
+        var container=document.getElementById('wishlist-sidebar-container');
+        if(!container) return;
+        
+        // Get wishlist data from localStorage
+        var wishlistData=null;
+        var items=[];
+        try{
+            var customerDataStr=localStorage.getItem('mage-cache-storage');
+            if(customerDataStr){
+                var customerData=JSON.parse(customerDataStr);
+                wishlistData=customerData['wishlist'];
+                if(wishlistData&&wishlistData.items){
+                    items=Array.isArray(wishlistData.items)?wishlistData.items:[];
+                    // Limit to last 3 items
+                    items=items.slice(0,3);
+                }
+            }
+        }catch(e){
+            // Silently fail - no wishlist data available
+        }
+        
+        var itemCount=wishlistData&&wishlistData.counter?wishlistData.counter:items.length;
+        var listUrl=wishlistData&&wishlistData.listUrl?wishlistData.listUrl:'/wishlist/';
+        
+        // Escape functions
+        function escapeHtml(text){
+            var div=document.createElement('div');
+            div.textContent=text;
+            return div.innerHTML;
+        }
+        function escapeAttr(text){
+            return String(text).replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+        }
+        
+        // Build HTML
+        var html='<div class="block-title">';
+        html+='<strong role="heading" aria-level="2">My Wish List</strong>';
+        if(itemCount>0){
+            html+='<span class="counter">'+itemCount+'</span>';
+        }
+        html+='</div>';
+        html+='<div class="block-content">';
+        html+='<strong class="subtitle">Last Added Items</strong>';
+        
+        if(items.length===0){
+            html+='<div class="empty">You have no items in your wish list.</div>';
+        }else{
+            html+='<ol class="product-items" id="wishlist-sidebar">';
+            
+            items.forEach(function(item){
+                var productId=item.product_id||item.id||'';
+                var productUrl=item.product_url||'/catalog/product/view/id/'+productId;
+                var productName=item.product_name||item.name||'Product';
+                var productPrice=item.product_price||'';
+                var productImage=item.product_image||item.image||'';
+                var addToCartParams=item.add_to_cart_params||'#';
+                var deleteItemParams=item.delete_item_params||item.remove_url||'#';
+                var isSaleable=item.product_is_saleable_and_visible!==false;
+                var hasRequiredOptions=item.product_has_required_options===true;
+                
+                // Escape values
+                productName=escapeHtml(productName);
+                productUrl=escapeAttr(productUrl);
+                productId=escapeAttr(productId);
+                addToCartParams=escapeAttr(addToCartParams);
+                deleteItemParams=escapeAttr(deleteItemParams);
+                productImage=escapeAttr(productImage);
+                
+                html+='<li class="product-item">';
+                html+='<div class="product-item-info">';
+                
+                // Product image
+                if(productImage){
+                    html+='<a class="product-item-photo" href="'+productUrl+'" title="'+productName+'" rel="nofollow noindex" data-noindex="true">';
+                    html+='<img src="'+productImage+'" alt="'+productName+'" class="product-image-photo"/>';
+                    html+='</a>';
+                }else{
+                    html+='<a class="product-item-photo" href="'+productUrl+'" title="'+productName+'" rel="nofollow noindex" data-noindex="true"></a>';
+                }
+                
+                html+='<div class="product-item-details">';
+                html+='<strong class="product-item-name">';
+                html+='<a href="'+productUrl+'" class="product-item-link" rel="nofollow noindex" data-noindex="true">';
+                html+='<span>'+productName+'</span>';
+                html+='</a></strong>';
+                
+                // Product price
+                if(productPrice){
+                    html+='<div class="product-item-price">'+productPrice+'</div>';
+                }
+                
+                html+='<div class="product-item-actions">';
+                
+                // Add to cart
+                if(isSaleable){
+                    html+='<div class="actions-primary">';
+                    if(hasRequiredOptions){
+                        html+='<a href="#" data-post="'+addToCartParams+'" class="action tocart primary" rel="nofollow noindex" data-noindex="true">';
+                        html+='<span>Add to Cart</span></a>';
+                    }else{
+                        html+='<button type="button" class="action tocart primary" data-post="'+addToCartParams+'">';
+                        html+='<span>Add to Cart</span></button>';
+                    }
+                    html+='</div>';
+                }
+                
+                // Remove item
+                html+='<div class="actions-secondary">';
+                html+='<a href="#" data-post="'+deleteItemParams+'" title="Remove This Item" class="btn-remove action delete" rel="nofollow noindex" data-noindex="true">';
+                html+='<span>Remove This Item</span></a>';
+                html+='</div>';
+                
+                html+='</div></div></div></li>';
+            });
+            
+            html+='</ol>';
+            html+='<div class="actions-toolbar">';
+            html+='<div class="primary">';
+            html+='<a class="action details" href="'+escapeAttr(listUrl)+'" title="Go to Wish List" rel="nofollow noindex" data-noindex="true">';
+            html+='<span>Go to Wish List</span></a>';
+            html+='</div></div>';
+        }
+        
+        html+='</div>';
+        container.innerHTML=html;
+    }
+    
+    // Run on DOM ready
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded',renderWishlistSidebar);
+    }else{
+        renderWishlistSidebar();
+    }
+    
+    // Listen for localStorage changes (cross-tab)
+    window.addEventListener('storage',function(e){
+        if(e.key==='mage-cache-storage'){
+            renderWishlistSidebar();
+        }
+    });
+    
+    // Check periodically for changes (same-tab updates)
+    var lastCheck=localStorage.getItem('mage-cache-storage');
+    setInterval(function(){
+        var current=localStorage.getItem('mage-cache-storage');
+        if(current!==lastCheck){
+            lastCheck=current;
+            renderWishlistSidebar();
+        }
+    },1000);
+})();
+</script>

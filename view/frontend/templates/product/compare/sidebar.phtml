@@ -1,0 +1,124 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var \Magento\Framework\View\Element\Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<div class="block block-compare" data-role="compare-products-sidebar" id="compare-sidebar-container"></div>
+
+<script>
+(function(){
+    'use strict';
+    
+    // Render compare sidebar from localStorage
+    function renderCompareSidebar(){
+        var container=document.getElementById('compare-sidebar-container');
+        if(!container) return;
+        
+        // Get compare products from localStorage
+        var compareData=null;
+        var items=[];
+        try{
+            var customerDataStr=localStorage.getItem('mage-cache-storage');
+            if(customerDataStr){
+                var customerData=JSON.parse(customerDataStr);
+                compareData=customerData['compare-products'];
+                if(compareData&&compareData.items){
+                    items=Array.isArray(compareData.items)?compareData.items:[];
+                }
+            }
+        }catch(e){
+            // Silently fail - no compare data available
+        }
+        
+        // If no items, show empty message
+        if(items.length===0){
+            container.innerHTML='<div class="block-title"><strong id="block-compare-heading" role="heading" aria-level="2">Compare Products</strong></div><div class="empty">You have no items to compare.</div>';
+            return;
+        }
+        
+        var count=items.length;
+        var listUrl=(compareData&&compareData.listUrl)?compareData.listUrl:'/catalog/product_compare/';
+        var clearAllUrl='/catalog/product_compare/clear/';
+        
+        // Escape functions
+        function escapeHtml(text){
+            var div=document.createElement('div');
+            div.textContent=text;
+            return div.innerHTML;
+        }
+        function escapeAttr(text){
+            return String(text).replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+        }
+        
+        // Build HTML
+        var html='<div class="block-title">';
+        html+='<strong id="block-compare-heading" role="heading" aria-level="2">Compare Products</strong>';
+        html+='<span class="counter qty">'+count+'</span>';
+        html+='</div>';
+        html+='<div class="block-content" aria-labelledby="block-compare-heading">';
+        html+='<ol id="compare-items" class="product-items product-items-names">';
+        
+        items.forEach(function(item){
+            var productId=item.id||item.product_id||'';
+            var productUrl=item.product_url||'/catalog/product/view/id/'+productId;
+            var productName=item.name||'Product';
+            var removeUrl=item.remove_url||'#';
+            
+            productName=escapeHtml(productName);
+            productUrl=escapeAttr(productUrl);
+            productId=escapeAttr(productId);
+            removeUrl=escapeAttr(removeUrl);
+            
+            html+='<li class="product-item">';
+            html+='<input type="hidden" class="compare-item-id" value="'+productId+'"/>';
+            html+='<strong class="product-item-name">';
+            html+='<a href="'+productUrl+'" class="product-item-link" rel="nofollow noindex" data-noindex="true">';
+            html+=productName;
+            html+='</a></strong>';
+            html+='<a href="#" data-post="'+removeUrl+'" title="Remove This Item" class="action delete" rel="nofollow noindex" data-noindex="true">';
+            html+='<span>Remove This Item</span></a>';
+            html+='</li>';
+        });
+        
+        html+='</ol>';
+        html+='<div class="actions-toolbar">';
+        html+='<div class="primary">';
+        html+='<a href="'+listUrl+'" class="action compare primary" rel="nofollow noindex" data-noindex="true">';
+        html+='<span>Compare</span></a></div>';
+        html+='<div class="secondary">';
+        var clearAllPost=JSON.stringify({"action":clearAllUrl,"data":{"uenc":"","confirmation":true,"confirmationMessage":"Are you sure you want to remove all items from your Compare Products list?"}});
+        html+='<a id="compare-clear-all" href="#" class="action clear" data-post=\''+clearAllPost.replace(/'/g,'&#x27;')+'\' rel="nofollow noindex" data-noindex="true">';
+        html+='<span>Clear All</span></a></div></div></div>';
+        
+        container.innerHTML=html;
+    }
+    
+    // Run on DOM ready
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded',renderCompareSidebar);
+    }else{
+        renderCompareSidebar();
+    }
+    
+    // Listen for localStorage changes (cross-tab)
+    window.addEventListener('storage',function(e){
+        if(e.key==='mage-cache-storage'){
+            renderCompareSidebar();
+        }
+    });
+    
+    // Check periodically for changes (same-tab updates)
+    var lastCheck=localStorage.getItem('mage-cache-storage');
+    setInterval(function(){
+        var current=localStorage.getItem('mage-cache-storage');
+        if(current!==lastCheck){
+            lastCheck=current;
+            renderCompareSidebar();
+        }
+    },1000);
+})();
+</script>
