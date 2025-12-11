@@ -42,28 +42,44 @@ class Template extends MTemplate
 
     public function removeAdobeJSJunk()
     {
+        // Check cookie first
+        if (isset($_COOKIE['js-junk'])) {
+            return $_COOKIE['js-junk'] === "true";
+        }
+        
+        // Fall back to GET parameter
         if (isset($_GET['js-junk']) && $_GET['js-junk'] === "false") {
-            return $removeAdobeJSJunk = false;
+            return false;
         }
         if (isset($_GET['js-junk']) && $_GET['js-junk'] === "true") {
-            return $removeAdobeJSJunk = true;
+            return true;
         }
+        
+        // Fall back to config
         return boolval($this->config->getValue('react_vue_config/junk/remove'));
     }
 
     public function removeAdobeCSSJunk()
     {
+        // Check cookie first
+        if (isset($_COOKIE['css-react'])) {
+            return $_COOKIE['css-react'] === "true";
+        }
+        
+        // Fall back to GET parameter
         if (!isset($_GET['css-react'])) {
-            return $removeCSSjunk = boolval($this->config->getValue('react_vue_config/junk/remove'));
+            return boolval($this->config->getValue('react_vue_config/junk/remove'));
         }
 
         if (isset($_GET['css-react']) && $_GET['css-react'] === "false") {
-            $removeCSSjunk = false;
+            return false;
         }
         if (isset($_GET['css-react']) && $_GET['css-react'] === "true") {
-            $removeCSSjunk = true;
+            return true;
         }
-        return $removeCSSjunk;
+        
+        // Fall back to config (should not reach here, but safety fallback)
+        return boolval($this->config->getValue('react_vue_config/junk/remove'));
     }
 
     public function getInlineJs($file) {

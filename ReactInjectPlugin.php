@@ -34,6 +34,7 @@ class ReactInjectPlugin extends Renderer
 
     public $staticVersion = 0;
     private $apcuEnabled = null;
+    private $localPathCache = [];
     private $assetVariables = [];
     private $objectManager = null;
     private $configuration = [];
@@ -224,6 +225,53 @@ class ReactInjectPlugin extends Renderer
     }
 
     /**
+     * Get store-specific static path prefix
+     * Default store uses root pub/static, other stores use pub/static/{store_code}/
+     *
+     * @return string Path prefix (empty for default store, or '{store_code}/' for others)
+     */
+    private function getStoreStaticPathPrefix(): string
+    {
+        try {
+            $storeCode = $this->store->getStore()->getCode();
+            // Default store code is usually 'default' or empty
+            if (empty($storeCode) || $storeCode === 'default') {
+                return '';
+            }
+            return $storeCode . '/';
+        } catch (\Exception $e) {
+            // Fallback to default if store is not available
+            return '';
+        }
+    }
+
+    /**
+     * Check if store-specific folder exists and return effective path prefix
+     * If store folder doesn't exist, fallback to default store (empty prefix)
+     * Uses cached directory check via checkFile()
+     *
+     * @param string $storePathPrefix Store-specific path prefix (e.g., 'fr/' or '')
+     * @return string Effective path prefix (empty if folder doesn't exist)
+     */
+    private function getEffectiveStorePathPrefix(string $storePathPrefix): string
+    {
+        // If no store prefix, use default
+        if (empty($storePathPrefix)) {
+            return '';
+        }
+        
+        // Check if store-specific folder exists using cached checkFile()
+        $storeFolderPath = BP . '/pub/static/' . rtrim($storePathPrefix, '/');
+        if (!$this->checkFile($storeFolderPath)) {
+            // Store-specific folder doesn't exist, fallback to default store
+            return '';
+        }
+        
+        // Store-specific folder exists, use store prefix
+        return $storePathPrefix;
+    }
+
+    /**
      * Process mobile CSS optimization
      */
     private function processMobileCSS(array $assets, $key, $asset, array $requestContext, array $pageTypes, string $baseURL): array
@@ -231,70 +279,76 @@ class ReactInjectPlugin extends Renderer
         if (in_array($requestContext['actionName'], $this->actionFilter) && strpos($asset->getUrl(), 'styles-m')) {
             $this->assetVariables['assetNotOptimisedMobile'] = $asset->getUrl();
 
+            // Get store-specific path prefix and check if folder exists (fallback to default if not)
+            $storePathPrefix = $this->getStoreStaticPathPrefix();
+            $effectivePathPrefix = $this->getEffectiveStorePathPrefix($storePathPrefix);
+            $staticPathPrefix = BP . '/pub/static/' . $effectivePathPrefix;
+            $urlPathPrefix = $effectivePathPrefix;
+
             // Set up optimized file paths and URLs
-            $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
-            $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
+            $optimisedCSSFileUrl = $baseURL . $urlPathPrefix . 'styles-m.css';
+            $optimisedCSSFilePath = $staticPathPrefix . 'styles-m.css';
             if ($this->isMinifyEnabled()) {
-                $minifiedPath = BP . '/pub/static/styles-m.min.css';
+                $minifiedPath = $staticPathPrefix . 'styles-m.min.css';
                 if ($this->checkFile($minifiedPath)) {
-                    $optimisedCSSFileUrl = $baseURL . 'styles-m.min.css';
+                    $optimisedCSSFileUrl = $baseURL . $urlPathPrefix . 'styles-m.min.css';
                     $optimisedCSSFilePath = $minifiedPath;
                 }
             }
 
             // Product CSS paths
-            $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.css';
-            $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.css';
-            $this->assetVariables['optimisedProductCSSFileCriticalPath'] = BP . '/pub/static/product-critical-m.css';
-            $optimisedProductCSSFilePath = BP . '/pub/static/product-styles-m.css';
+            $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . $urlPathPrefix . 'product-styles-m.css';
+            $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . $urlPathPrefix . 'product-critical-m.css';
+            $this->assetVariables['optimisedProductCSSFileCriticalPath'] = $staticPathPrefix . 'product-critical-m.css';
+            $optimisedProductCSSFilePath = $staticPathPrefix . 'product-styles-m.css';
 
             // Category CSS paths
-            $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.css';
-            $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
-            $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css';
-            $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = BP . '/pub/static/category-critical-m.css';
+            $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . $urlPathPrefix . 'category-styles-m.css';
+            $optimisedCategoryCSSFilePath = $staticPathPrefix . 'category-styles-m.css';
+            $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . $urlPathPrefix . 'category-critical-m.css';
+            $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = $staticPathPrefix . 'category-critical-m.css';
 
             // Home CSS paths
-            $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . 'home-styles-m.css';
-            $optimisedHomeCSSFilePath = BP . '/pub/static/home-styles-m.css';
-            $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . 'home-critical-m.css';
-            $this->assetVariables['optimisedHomeCSSFileCriticalPath'] = BP . '/pub/static/home-critical-m.css';
+            $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . $urlPathPrefix . 'home-styles-m.css';
+            $optimisedHomeCSSFilePath = $staticPathPrefix . 'home-styles-m.css';
+            $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . $urlPathPrefix . 'home-critical-m.css';
+            $this->assetVariables['optimisedHomeCSSFileCriticalPath'] = $staticPathPrefix . 'home-critical-m.css';
 
             // If minification is enabled, try minified versions and fallback to regular if not found
             if ($this->isMinifyEnabled()) {
                 // Product CSS - check if minified exists, otherwise keep regular
-                $minifiedProductPath = BP . '/pub/static/product-styles-m.min.css';
-                $minifiedProductCriticalPath = BP . '/pub/static/product-critical-m.min.css';
+                $minifiedProductPath = $staticPathPrefix . 'product-styles-m.min.css';
+                $minifiedProductCriticalPath = $staticPathPrefix . 'product-critical-m.min.css';
                 if ($this->checkFile($minifiedProductPath)) {
-                    $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.min.css';
+                    $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . $urlPathPrefix . 'product-styles-m.min.css';
                     $optimisedProductCSSFilePath = $minifiedProductPath;
                 }
                 if ($this->checkFile($minifiedProductCriticalPath)) {
-                    $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.min.css';
+                    $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . $urlPathPrefix . 'product-critical-m.min.css';
                     $this->assetVariables['optimisedProductCSSFileCriticalPath'] = $minifiedProductCriticalPath;
                 }
 
                 // Category CSS - check if minified exists, otherwise keep regular
-                $minifiedCategoryPath = BP . '/pub/static/category-styles-m.min.css';
-                $minifiedCategoryCriticalPath = BP . '/pub/static/category-critical-m.min.css';
+                $minifiedCategoryPath = $staticPathPrefix . 'category-styles-m.min.css';
+                $minifiedCategoryCriticalPath = $staticPathPrefix . 'category-critical-m.min.css';
                 if ($this->checkFile($minifiedCategoryPath)) {
-                    $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.min.css';
+                    $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . $urlPathPrefix . 'category-styles-m.min.css';
                     $optimisedCategoryCSSFilePath = $minifiedCategoryPath;
                 }
                 if ($this->checkFile($minifiedCategoryCriticalPath)) {
-                    $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.min.css';
+                    $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . $urlPathPrefix . 'category-critical-m.min.css';
                     $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = $minifiedCategoryCriticalPath;
                 }
 
                 // Home CSS - check if minified exists, otherwise keep regular
-                $minifiedHomePath = BP . '/pub/static/home-styles-m.min.css';
-                $minifiedHomeCriticalPath = BP . '/pub/static/home-critical-m.min.css';
+                $minifiedHomePath = $staticPathPrefix . 'home-styles-m.min.css';
+                $minifiedHomeCriticalPath = $staticPathPrefix . 'home-critical-m.min.css';
                 if ($this->checkFile($minifiedHomePath)) {
-                    $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . 'home-styles-m.min.css';
+                    $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . $urlPathPrefix . 'home-styles-m.min.css';
                     $optimisedHomeCSSFilePath = $minifiedHomePath;
                 }
                 if ($this->checkFile($minifiedHomeCriticalPath)) {
-                    $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . 'home-critical-m.min.css';
+                    $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . $urlPathPrefix . 'home-critical-m.min.css';
                     $this->assetVariables['optimisedHomeCSSFileCriticalPath'] = $minifiedHomeCriticalPath;
                 }
             }
@@ -515,36 +569,84 @@ class ReactInjectPlugin extends Renderer
     }
 
     /**
-     * Add product CSS links
+     * Generic method to add page-specific CSS links
+     *
+     * @param string $result Current HTML result
+     * @param array $pageTypes Page type flags
+     * @param string $optimizedAssetKey Key for optimized CSS asset (e.g., 'assetProductOptimized')
+     * @param string $criticalPathKey Key for critical CSS file path (e.g., 'optimisedProductCSSFileCriticalPath')
+     * @param string $criticalUrlKey Key for critical CSS URL (e.g., 'optimisedProductCSSFileCriticalUrl')
+     * @param string $pageTypeKey Page type check key (e.g., 'isProduct')
+     * @param string|null $fallbackAssetKey Optional fallback asset key (e.g., 'assetNotOptimisedMobile')
+     * @param bool $addPreloadHeader Whether to add preload header for critical CSS
+     * @return string Updated HTML result
      */
-    private function addProductCSSLinks(string $result, array $pageTypes): string
-    {
-        if ($this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
+    private function addPageSpecificCSSLinks(
+        string $result,
+        array $pageTypes,
+        string $optimizedAssetKey,
+        string $criticalPathKey,
+        string $criticalUrlKey,
+        string $pageTypeKey,
+        ?string $fallbackAssetKey = null,
+        bool $addPreloadHeader = false
+    ): string {
+        $optimizedAsset = $this->assetVariables[$optimizedAssetKey] ?? false;
+        $criticalPath = $this->assetVariables[$criticalPathKey] ?? false;
+        $criticalUrl = $this->assetVariables[$criticalUrlKey] ?? '';
+
+        // Early return guard clause: if page type doesn't match, return unchanged
+        if (empty($pageTypes[$pageTypeKey])) {
+            return $result;
+        }
+        
+        // After early return, we know $pageTypes[$pageTypeKey] is true, so we can simplify conditions
+        if ($optimizedAsset) {
             // Check if critical CSS file exists
-            $criticalCSSExists = $this->assetVariables['optimisedProductCSSFileCriticalPath'] 
-                && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath']);
+            $criticalCSSExists = $criticalPath && $this->checkFile($criticalPath);
             
             if ($criticalCSSExists) {
                 // Critical CSS exists: load critical CSS + optimized CSS with print media trick
-                if (!$this->configuration['criticalCSSHTML']) {
-                    @header('Link: <' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '>; rel=preload; as=style', false);
-                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '" />' . "\n" . $result;
+                if ($addPreloadHeader && !$this->configuration['criticalCSSHTML']) {
+                    @header('Link: <' . $criticalUrl . '>; rel=preload; as=style', false);
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $criticalUrl . '" />' . "\n" . $result;
+                } elseif (!$addPreloadHeader) {
+                    // For category, always add critical CSS inline
+                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $criticalUrl . '" />' . "\n" . $result;
                 }
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $optimizedAsset . '" />' . "\n" . $result;
             } else {
                 // Critical CSS doesn't exist: load optimized CSS as regular stylesheet (no print media trick)
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $optimizedAsset . '" />' . "\n" . $result;
             }
-        } elseif (!$this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
-            if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '" />' . "\n" . $result;
-                if (!empty($this->assetVariables['assetNotOptimisedMobile'])) {
-                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '" />' . "\n" . $result;
+        } elseif (!$optimizedAsset) {
+            // No optimized asset, but check if critical CSS exists
+            if ($criticalPath && $this->checkFile($criticalPath)) {
+                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $criticalUrl . '" />' . "\n" . $result;
+                if ($fallbackAssetKey && !empty($this->assetVariables[$fallbackAssetKey])) {
+                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables[$fallbackAssetKey] . '" />' . "\n" . $result;
                 }
             }
         }
 
         return $result;
+    }
+
+    /**
+     * Add product CSS links
+     */
+    private function addProductCSSLinks(string $result, array $pageTypes): string
+    {
+        return $this->addPageSpecificCSSLinks(
+            result: $result,
+            pageTypes: $pageTypes,
+            optimizedAssetKey: 'assetProductOptimized',
+            criticalPathKey: 'optimisedProductCSSFileCriticalPath',
+            criticalUrlKey: 'optimisedProductCSSFileCriticalUrl',
+            pageTypeKey: 'isProduct',
+            fallbackAssetKey: 'assetNotOptimisedMobile',
+            addPreloadHeader: true
+        );
     }
 
     /**
@@ -552,29 +654,16 @@ class ReactInjectPlugin extends Renderer
      */
     private function addCategoryCSSLinks(string $result, array $pageTypes): string
     {
-        if ($this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
-            // Check if critical CSS file exists
-            $criticalCSSExists = $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] 
-                && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath']);
-            
-            if ($criticalCSSExists) {
-                // Critical CSS exists: load critical CSS + optimized CSS with print media trick
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '" />' . "\n" . $result;
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetCategoryOptimized'] . '" />' . "\n" . $result;
-            } else {
-                // Critical CSS doesn't exist: load optimized CSS as regular stylesheet (no print media trick)
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetCategoryOptimized'] . '" />' . "\n" . $result;
-            }
-        } elseif (!$this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
-            if ($this->assetVariables['optimisedCategoryCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath'])) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '" />' . "\n" . $result;
-                if (!empty($this->assetVariables['assetNotOptimisedLarge'])) {
-                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedLarge'] . '" />' . "\n" . $result;
-                }
-            }
-        }
-
-        return $result;
+        return $this->addPageSpecificCSSLinks(
+            result: $result,
+            pageTypes: $pageTypes,
+            optimizedAssetKey: 'assetCategoryOptimized',
+            criticalPathKey: 'optimisedCategoryCSSFileCriticalPath',
+            criticalUrlKey: 'optimisedCategoryCSSFileCriticalUrl',
+            pageTypeKey: 'isCategory',
+            fallbackAssetKey: 'assetNotOptimisedLarge',
+            addPreloadHeader: false
+        );
     }
 
     /**
@@ -582,32 +671,16 @@ class ReactInjectPlugin extends Renderer
      */
     private function addHomePageCSSLinks(string $result, array $pageTypes): string
     {
-        if ($this->assetVariables['assetHomeOptimized'] && $pageTypes['isHome']) {
-            // Check if critical CSS file exists
-            $criticalCSSExists = $this->assetVariables['optimisedHomeCSSFileCriticalPath'] 
-                && $this->checkFile($this->assetVariables['optimisedHomeCSSFileCriticalPath']);
-            
-            if ($criticalCSSExists) {
-                // Critical CSS exists: load critical CSS + optimized CSS with print media trick
-                if (!$this->configuration['criticalCSSHTML']) {
-                    @header('Link: <' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '>; rel=preload; as=style', false);
-                    $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '" />' . "\n" . $result;
-                }
-                $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetHomeOptimized'] . '" />' . "\n" . $result;
-            } else {
-                // Critical CSS doesn't exist: load optimized CSS as regular stylesheet (no print media trick)
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetHomeOptimized'] . '" />' . "\n" . $result;
-            }
-        } elseif (!$this->assetVariables['assetHomeOptimized'] && $pageTypes['isHome']) {
-            if ($this->assetVariables['optimisedHomeCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedHomeCSSFileCriticalPath'])) {
-                $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '" />' . "\n" . $result;
-                if (!empty($this->assetVariables['assetNotOptimisedMobile'])) {
-                    $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetNotOptimisedMobile'] . '" />' . "\n" . $result;
-                }
-            }
-        }
-
-        return $result;
+        return $this->addPageSpecificCSSLinks(
+            result: $result,
+            pageTypes: $pageTypes,
+            optimizedAssetKey: 'assetHomeOptimized',
+            criticalPathKey: 'optimisedHomeCSSFileCriticalPath',
+            criticalUrlKey: 'optimisedHomeCSSFileCriticalUrl',
+            pageTypeKey: 'isHome',
+            fallbackAssetKey: 'assetNotOptimisedMobile',
+            addPreloadHeader: true
+        );
     }
 
     /**
@@ -618,40 +691,61 @@ class ReactInjectPlugin extends Renderer
         return preg_replace('/<script[^>]*require[^>]*><\/script>/', '', $result);
     }
 
-    public function checkFile($file)
+    /**
+     * Check if file or directory exists with multi-level caching
+     * Supports both files and directories
+     * Cache hierarchy: Local cache (request) -> APCu cache (shared) -> File system
+     *
+     * @param string $path File or directory path
+     * @return bool True if file or directory exists
+     */
+    public function checkFile($path)
     {
-        // APCu cache optimization for file existence checks
+        // Level 1: Check local cache (fastest, same request only)
+        if (isset($this->localPathCache[$path])) {
+            return $this->localPathCache[$path];
+        }
+
+        // Level 2: Check APCu cache (shared across requests)
         if ($this->apcuEnabled === null) {
             $this->apcuEnabled = extension_loaded('apcu') && ini_get('apc.enabled');
         }
+        
         if ($this->apcuEnabled) {
             // Use fastest available hash function
             if (function_exists('hash') && in_array('xxh3', hash_algos())) {
-                $cacheKey = 'file_exists_' . hash('xxh3', $file) . '_' . $this->getStaticVersion();
+                $cacheKey = 'path_exists_' . hash('xxh3', $path) . '_' . $this->getStaticVersion();
             } elseif (function_exists('hash') && in_array('xxh64', hash_algos())) {
-                $cacheKey = 'file_exists_' . hash('xxh64', $file) . '_' . $this->getStaticVersion();
+                $cacheKey = 'path_exists_' . hash('xxh64', $path) . '_' . $this->getStaticVersion();
             } elseif (function_exists('hash') && in_array('crc32', hash_algos())) {
-                $cacheKey = 'file_exists_' . hash('crc32', $file) . '_' . $this->getStaticVersion();
+                $cacheKey = 'path_exists_' . hash('crc32', $path) . '_' . $this->getStaticVersion();
             } else {
                 // Fallback to crc32() function (fastest built-in)
-                $cacheKey = 'file_exists_' . crc32($file) . '_' . $this->getStaticVersion();
+                $cacheKey = 'path_exists_' . crc32($path) . '_' . $this->getStaticVersion();
             }
 
             $cachedResult = apcu_fetch($cacheKey);
 
             if ($cachedResult !== false) {
+                // Store in local cache for faster subsequent access
+                $this->localPathCache[$path] = $cachedResult;
                 return $cachedResult;
             }
-
-            $exists = file_exists($file);
-            // Cache for 1 hour (3600 seconds) - adjust as needed
-            apcu_store($cacheKey, $exists, 3600);
-
-            return $exists;
         }
 
-        // Fallback to direct file_exists if APCu is not available
-        return file_exists($file);
+        // Level 3: Check file system (slowest)
+        $exists = file_exists($path) || is_dir($path);
+        
+        // Store in local cache
+        $this->localPathCache[$path] = $exists;
+        
+        // Store in APCu cache if available
+        if ($this->apcuEnabled) {
+            // Cache for 1 hour (3600 seconds) - adjust as needed
+            apcu_store($cacheKey, $exists, 3600);
+        }
+
+        return $exists;
     }
 
     public function getStaticVersion()

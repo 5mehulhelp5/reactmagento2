@@ -62,6 +62,15 @@ You can also replace Magento CSS with your custom CSS files if you put them comp
 $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
 ```
 
+## Store specific styles
+
+The module supports store-specific CSS files for multi-store setups. By default, optimized CSS files are located in `/pub/static/` for the default store. For other stores, CSS files should be placed in `/pub/static/{store_code}/` directory. For example:
+- Default store: `/pub/static/product-styles-m.css`
+- French store (`fr`): `/pub/static/fr/product-styles-m.css`
+- German store (`de`): `/pub/static/de/product-styles-m.css`
+
+The module automatically detects the current store code and loads the appropriate CSS files. If store-specific files don't exist, it falls back to the default store files. This allows you to customize styles per store while maintaining a fallback mechanism.
+
 
 # VueJS support 
 

@@ -262,6 +262,17 @@ class MockStoreManager implements \Magento\Store\Model\StoreManagerInterface
             public function getStoreGroupId() { return 1; }
             public function getIsActive() { return true; }
             public function getSortOrder() { return 0; }
+            // Required setters
+            public function setId($id) { return $this; }
+            public function setCode($code) { return $this; }
+            public function setName($name) { return $this; }
+            public function setWebsiteId($websiteId) { return $this; }
+            public function setStoreGroupId($storeGroupId) { return $this; }
+            public function setIsActive($isActive) { return $this; }
+            public function setSortOrder($sortOrder) { return $this; }
+            // Extension attributes
+            public function getExtensionAttributes() { return null; }
+            public function setExtensionAttributes(\Magento\Store\Api\Data\StoreExtensionInterface $extensionAttributes) { return $this; }
         };
     }
     
@@ -1180,6 +1191,260 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         
     });
     
+    test('product page loads optimized CSS with print media trick when critical CSS exists', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Create temporary critical CSS file
+        $criticalCSSFile = BP . '/pub/static/product-critical-m.css';
+        $criticalCSSFileExists = file_exists($criticalCSSFile);
+        if (!$criticalCSSFileExists) {
+            file_put_contents($criticalCSSFile, '/* critical CSS */');
+        }
+        
+        try {
+            // Set up asset variables
+            $helper->setProperty('assetVariables', [
+                'assetProductOptimized' => 'http://localhost/pub/static/product-styles-m.css',
+                'optimisedProductCSSFileCriticalPath' => $criticalCSSFile,
+                'optimisedProductCSSFileCriticalUrl' => 'http://localhost/pub/static/product-critical-m.css',
+                'assetOptimized' => false,
+                'assetCategoryOptimized' => false,
+                'assetHomeOptimized' => false,
+                'assetOptimizedLarge' => false,
+                'assetNotOptimisedMobile' => false,
+                'assetNotOptimisedLarge' => false,
+                'optimisedCategoryCSSFileCriticalPath' => false,
+                'optimisedCategoryCSSFileCriticalUrl' => '',
+                'optimisedHomeCSSFileCriticalPath' => false,
+                'optimisedHomeCSSFileCriticalUrl' => '',
+            ]);
+            
+            $helper->setProperty('configuration', [
+                'criticalCSSHTML' => false,
+            ]);
+            
+            $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+            $result = '';
+            
+            // Test addProductCSSLinks
+            $result = $helper->callMethod('addProductCSSLinks', $result, $pageTypes);
+            
+            // Should use print media trick when critical CSS exists
+            expect($result)->toContain('media="print"')
+                ->and($result)->toContain('onload="this.onload=null;this.media=\'all\';"')
+                ->and($result)->toContain('product-styles-m.css');
+        } finally {
+            // Clean up temporary file if we created it
+            if (!$criticalCSSFileExists && file_exists($criticalCSSFile)) {
+                unlink($criticalCSSFile);
+            }
+        }
+    });
+    
+    test('product page loads optimized CSS as regular stylesheet when critical CSS does not exist', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Use a non-existent critical CSS file path
+        $nonExistentCriticalCSSFile = BP . '/pub/static/product-critical-m-nonexistent.css';
+        
+        // Set up asset variables
+        $helper->setProperty('assetVariables', [
+            'assetProductOptimized' => 'http://localhost/pub/static/product-styles-m.css',
+            'optimisedProductCSSFileCriticalPath' => $nonExistentCriticalCSSFile,
+            'optimisedProductCSSFileCriticalUrl' => 'http://localhost/pub/static/product-critical-m.css',
+            'assetOptimized' => false,
+            'assetCategoryOptimized' => false,
+            'assetHomeOptimized' => false,
+            'assetOptimizedLarge' => false,
+            'assetNotOptimisedMobile' => false,
+            'assetNotOptimisedLarge' => false,
+            'optimisedCategoryCSSFileCriticalPath' => false,
+            'optimisedCategoryCSSFileCriticalUrl' => '',
+            'optimisedHomeCSSFileCriticalPath' => false,
+            'optimisedHomeCSSFileCriticalUrl' => '',
+        ]);
+        
+        $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+        $result = '';
+        
+        // Test addProductCSSLinks
+        $result = $helper->callMethod('addProductCSSLinks', $result, $pageTypes);
+        
+        // Should NOT use print media trick when critical CSS doesn't exist
+        expect($result)->not->toContain('media="print"')
+            ->and($result)->not->toContain('onload="this.onload=null;this.media=\'all\';"')
+            ->and($result)->toContain('media="all"')
+            ->and($result)->toContain('product-styles-m.css');
+    });
+    
+    test('category page loads optimized CSS with print media trick when critical CSS exists', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Create temporary critical CSS file
+        $criticalCSSFile = BP . '/pub/static/category-critical-m.css';
+        $criticalCSSFileExists = file_exists($criticalCSSFile);
+        if (!$criticalCSSFileExists) {
+            file_put_contents($criticalCSSFile, '/* critical CSS */');
+        }
+        
+        try {
+            // Set up asset variables
+            $helper->setProperty('assetVariables', [
+                'assetCategoryOptimized' => 'http://localhost/pub/static/category-styles-m.css',
+                'optimisedCategoryCSSFileCriticalPath' => $criticalCSSFile,
+                'optimisedCategoryCSSFileCriticalUrl' => 'http://localhost/pub/static/category-critical-m.css',
+                'assetOptimized' => false,
+                'assetProductOptimized' => false,
+                'assetHomeOptimized' => false,
+                'assetOptimizedLarge' => false,
+                'assetNotOptimisedMobile' => false,
+                'assetNotOptimisedLarge' => false,
+                'optimisedProductCSSFileCriticalPath' => false,
+                'optimisedProductCSSFileCriticalUrl' => '',
+                'optimisedHomeCSSFileCriticalPath' => false,
+                'optimisedHomeCSSFileCriticalUrl' => '',
+            ]);
+            
+            $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false];
+            $result = '';
+            
+            // Test addCategoryCSSLinks
+            $result = $helper->callMethod('addCategoryCSSLinks', $result, $pageTypes);
+            
+            // Should use print media trick when critical CSS exists
+            expect($result)->toContain('media="print"')
+                ->and($result)->toContain('onload="this.onload=null;this.media=\'all\';"')
+                ->and($result)->toContain('category-styles-m.css');
+        } finally {
+            // Clean up temporary file if we created it
+            if (!$criticalCSSFileExists && file_exists($criticalCSSFile)) {
+                unlink($criticalCSSFile);
+            }
+        }
+    });
+    
+    test('category page loads optimized CSS as regular stylesheet when critical CSS does not exist', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Use a non-existent critical CSS file path
+        $nonExistentCriticalCSSFile = BP . '/pub/static/category-critical-m-nonexistent.css';
+        
+        // Set up asset variables
+        $helper->setProperty('assetVariables', [
+            'assetCategoryOptimized' => 'http://localhost/pub/static/category-styles-m.css',
+            'optimisedCategoryCSSFileCriticalPath' => $nonExistentCriticalCSSFile,
+            'optimisedCategoryCSSFileCriticalUrl' => 'http://localhost/pub/static/category-critical-m.css',
+            'assetOptimized' => false,
+            'assetProductOptimized' => false,
+            'assetHomeOptimized' => false,
+            'assetOptimizedLarge' => false,
+            'assetNotOptimisedMobile' => false,
+            'assetNotOptimisedLarge' => false,
+            'optimisedProductCSSFileCriticalPath' => false,
+            'optimisedProductCSSFileCriticalUrl' => '',
+            'optimisedHomeCSSFileCriticalPath' => false,
+            'optimisedHomeCSSFileCriticalUrl' => '',
+        ]);
+        
+        $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false];
+        $result = '';
+        
+        // Test addCategoryCSSLinks
+        $result = $helper->callMethod('addCategoryCSSLinks', $result, $pageTypes);
+        
+        // Should NOT use print media trick when critical CSS doesn't exist
+        expect($result)->not->toContain('media="print"')
+            ->and($result)->not->toContain('onload="this.onload=null;this.media=\'all\';"')
+            ->and($result)->toContain('media="all"')
+            ->and($result)->toContain('category-styles-m.css');
+    });
+    
+    test('home page loads optimized CSS with print media trick when critical CSS exists', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Create temporary critical CSS file
+        $criticalCSSFile = BP . '/pub/static/home-critical-m.css';
+        $criticalCSSFileExists = file_exists($criticalCSSFile);
+        if (!$criticalCSSFileExists) {
+            file_put_contents($criticalCSSFile, '/* critical CSS */');
+        }
+        
+        try {
+            // Set up asset variables
+            $helper->setProperty('assetVariables', [
+                'assetHomeOptimized' => 'http://localhost/pub/static/home-styles-m.css',
+                'optimisedHomeCSSFileCriticalPath' => $criticalCSSFile,
+                'optimisedHomeCSSFileCriticalUrl' => 'http://localhost/pub/static/home-critical-m.css',
+                'assetOptimized' => false,
+                'assetProductOptimized' => false,
+                'assetCategoryOptimized' => false,
+                'assetOptimizedLarge' => false,
+                'assetNotOptimisedMobile' => false,
+                'assetNotOptimisedLarge' => false,
+                'optimisedProductCSSFileCriticalPath' => false,
+                'optimisedProductCSSFileCriticalUrl' => '',
+                'optimisedCategoryCSSFileCriticalPath' => false,
+                'optimisedCategoryCSSFileCriticalUrl' => '',
+            ]);
+            
+            $helper->setProperty('configuration', [
+                'criticalCSSHTML' => false,
+            ]);
+            
+            $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+            $result = '';
+            
+            // Test addHomePageCSSLinks
+            $result = $helper->callMethod('addHomePageCSSLinks', $result, $pageTypes);
+            
+            // Should use print media trick when critical CSS exists
+            expect($result)->toContain('media="print"')
+                ->and($result)->toContain('onload="this.onload=null;this.media=\'all\';"')
+                ->and($result)->toContain('home-styles-m.css');
+        } finally {
+            // Clean up temporary file if we created it
+            if (!$criticalCSSFileExists && file_exists($criticalCSSFile)) {
+                unlink($criticalCSSFile);
+            }
+        }
+    });
+    
+    test('home page loads optimized CSS as regular stylesheet when critical CSS does not exist', function () {
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Use a non-existent critical CSS file path
+        $nonExistentCriticalCSSFile = BP . '/pub/static/home-critical-m-nonexistent.css';
+        
+        // Set up asset variables
+        $helper->setProperty('assetVariables', [
+            'assetHomeOptimized' => 'http://localhost/pub/static/home-styles-m.css',
+            'optimisedHomeCSSFileCriticalPath' => $nonExistentCriticalCSSFile,
+            'optimisedHomeCSSFileCriticalUrl' => 'http://localhost/pub/static/home-critical-m.css',
+            'assetOptimized' => false,
+            'assetProductOptimized' => false,
+            'assetCategoryOptimized' => false,
+            'assetOptimizedLarge' => false,
+            'assetNotOptimisedMobile' => false,
+            'assetNotOptimisedLarge' => false,
+            'optimisedProductCSSFileCriticalPath' => false,
+            'optimisedProductCSSFileCriticalUrl' => '',
+            'optimisedCategoryCSSFileCriticalPath' => false,
+            'optimisedCategoryCSSFileCriticalUrl' => '',
+        ]);
+        
+        $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+        $result = '';
+        
+        // Test addHomePageCSSLinks
+        $result = $helper->callMethod('addHomePageCSSLinks', $result, $pageTypes);
+        
+        // Should NOT use print media trick when critical CSS doesn't exist
+        expect($result)->not->toContain('media="print"')
+            ->and($result)->not->toContain('onload="this.onload=null;this.media=\'all\';"')
+            ->and($result)->toContain('media="all"')
+            ->and($result)->toContain('home-styles-m.css');
+    });
+    
     test('critical CSS config controls HTML inline vs preload', function () {
         // Test criticalCSSHTML = false (should add inline)
         $mockScopeConfigFalse = new MockScopeConfig([
@@ -1619,6 +1884,451 @@ describe('ReactInjectPlugin - Configuration Variants Tests', function () {
         expect($isAllowed)->toBeTrue()
             ->and($isNotAllowed)->toBeFalse();
         
+    });
+});
+
+describe('ReactInjectPlugin - Store Specific CSS Tests', function () {
+    test('default store uses root static path', function () {
+        // Create store manager that returns 'default' store code
+        $mockStoreManager = new class extends MockStoreManager {
+            public function getStore($storeId = null) {
+                return new class implements \Magento\Store\Api\Data\StoreInterface {
+                    public function getId() { return 1; }
+                    public function getCode() { return 'default'; }
+                    public function getName() { return 'Default Store'; }
+                    public function getWebsiteId() { return 1; }
+                    public function getStoreGroupId() { return 1; }
+                    public function getIsActive() { return true; }
+                    public function getSortOrder() { return 0; }
+                    public function setId($id) { return $this; }
+                    public function setCode($code) { return $this; }
+                    public function setName($name) { return $this; }
+                    public function setWebsiteId($websiteId) { return $this; }
+                    public function setStoreGroupId($storeGroupId) { return $this; }
+                    public function setIsActive($isActive) { return $this; }
+                    public function setSortOrder($sortOrder) { return $this; }
+                    public function getExtensionAttributes() { return null; }
+                    public function setExtensionAttributes(\Magento\Store\Api\Data\StoreExtensionInterface $extensionAttributes) { return $this; }
+                };
+            }
+        };
+        
+        $helper = new ReactInjectPluginTestHelper([
+            'storeManager' => $mockStoreManager
+        ]);
+        
+        // Call getStoreStaticPathPrefix method
+        $prefix = $helper->callMethod('getStoreStaticPathPrefix');
+        
+        // Default store should return empty string (root path)
+        expect($prefix)->toBe('');
+    });
+    
+    test('non-default store uses store code prefix', function () {
+        // Create store manager that returns 'fr' store code
+        $mockStoreManager = new class extends MockStoreManager {
+            public function getStore($storeId = null) {
+                return new class implements \Magento\Store\Api\Data\StoreInterface {
+                    public function getId() { return 2; }
+                    public function getCode() { return 'fr'; }
+                    public function getName() { return 'French Store'; }
+                    public function getWebsiteId() { return 1; }
+                    public function getStoreGroupId() { return 1; }
+                    public function getIsActive() { return true; }
+                    public function getSortOrder() { return 0; }
+                    public function setId($id) { return $this; }
+                    public function setCode($code) { return $this; }
+                    public function setName($name) { return $this; }
+                    public function setWebsiteId($websiteId) { return $this; }
+                    public function setStoreGroupId($storeGroupId) { return $this; }
+                    public function setIsActive($isActive) { return $this; }
+                    public function setSortOrder($sortOrder) { return $this; }
+                    public function getExtensionAttributes() { return null; }
+                    public function setExtensionAttributes(\Magento\Store\Api\Data\StoreExtensionInterface $extensionAttributes) { return $this; }
+                };
+            }
+        };
+        
+        $helper = new ReactInjectPluginTestHelper([
+            'storeManager' => $mockStoreManager
+        ]);
+        
+        // Call getStoreStaticPathPrefix method
+        $prefix = $helper->callMethod('getStoreStaticPathPrefix');
+        
+        // Non-default store should return store code with trailing slash
+        expect($prefix)->toBe('fr/');
+    });
+    
+    test('product CSS paths include store code for non-default store when folder exists', function () {
+        // Create store manager that returns 'de' store code
+        $mockStoreManager = new class extends MockStoreManager {
+            public function getStore($storeId = null) {
+                return new class implements \Magento\Store\Api\Data\StoreInterface {
+                    public function getId() { return 3; }
+                    public function getCode() { return 'de'; }
+                    public function getName() { return 'German Store'; }
+                    public function getWebsiteId() { return 1; }
+                    public function getStoreGroupId() { return 1; }
+                    public function getIsActive() { return true; }
+                    public function getSortOrder() { return 0; }
+                    public function setId($id) { return $this; }
+                    public function setCode($code) { return $this; }
+                    public function setName($name) { return $this; }
+                    public function setWebsiteId($websiteId) { return $this; }
+                    public function setStoreGroupId($storeGroupId) { return $this; }
+                    public function setIsActive($isActive) { return $this; }
+                    public function setSortOrder($sortOrder) { return $this; }
+                    public function getExtensionAttributes() { return null; }
+                    public function setExtensionAttributes(\Magento\Store\Api\Data\StoreExtensionInterface $extensionAttributes) { return $this; }
+                };
+            }
+        };
+        
+        // Create store-specific folder
+        $storeFolder = BP . '/pub/static/de';
+        $folderExists = is_dir($storeFolder);
+        if (!$folderExists) {
+            mkdir($storeFolder, 0755, true);
+        }
+        
+        try {
+            $helper = new ReactInjectPluginTestHelper([
+                'storeManager' => $mockStoreManager
+            ]);
+            
+            // Initialize asset variables
+            $helper->callMethod('initializeAssetVariables');
+            
+            // Simulate processMobileCSS for product page
+            $requestContext = [
+                'actionName' => 'catalog_product_view',
+                'removeController' => true,
+            ];
+            $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+            $baseURL = 'http://localhost/pub/static/';
+            
+            // Create mock asset
+            $mockAsset = new class {
+                public function getUrl() {
+                    return 'http://localhost/pub/static/styles-m.css';
+                }
+            };
+            
+            $assets = [0 => $mockAsset];
+            $key = 0;
+            
+            // Call processMobileCSS - this will set up the CSS paths with store code
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            // URLs should include store code prefix when folder exists
+            expect($assetVars['optimisedProductCSSFileUrl'])->toContain('de/product-styles-m')
+                ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->toContain('de/product-critical-m');
+            
+            // File paths should include store code prefix
+            expect($assetVars['optimisedProductCSSFileCriticalPath'])->toContain('/pub/static/de/product-critical-m');
+        } finally {
+            // Clean up folder if we created it
+            if (!$folderExists && is_dir($storeFolder)) {
+                rmdir($storeFolder);
+            }
+        }
+    });
+    
+    test('default store CSS paths do not include store code prefix', function () {
+        // Use default MockStoreManager which returns 'default' store code
+        $helper = new ReactInjectPluginTestHelper();
+        
+        // Initialize asset variables
+        $helper->callMethod('initializeAssetVariables');
+        
+        // Simulate processMobileCSS for product page
+        $requestContext = [
+            'actionName' => 'catalog_product_view',
+            'removeController' => true,
+        ];
+        $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+        $baseURL = 'http://localhost/pub/static/';
+        
+        // Create mock asset
+        $mockAsset = new class {
+            public function getUrl() {
+                return 'http://localhost/pub/static/styles-m.css';
+            }
+        };
+        
+        $assets = [0 => $mockAsset];
+        $key = 0;
+        
+        // Call processMobileCSS
+        $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+        
+        $assetVars = $helper->getProperty('assetVariables');
+        
+        // URLs should NOT include store code prefix for default store
+        expect($assetVars['optimisedProductCSSFileUrl'])->toContain('product-styles-m.css')
+            ->and($assetVars['optimisedProductCSSFileUrl'])->not->toContain('/default/')
+            ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->toContain('product-critical-m.css')
+            ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->not->toContain('/default/');
+        
+        // File paths should NOT include store code prefix
+        expect($assetVars['optimisedProductCSSFileCriticalPath'])->toContain('/pub/static/product-critical-m.css')
+            ->and($assetVars['optimisedProductCSSFileCriticalPath'])->not->toContain('/default/');
+    });
+    
+    test('category and home CSS paths include store code for non-default store when folder exists', function () {
+        // Create store manager that returns 'fr' store code
+        $mockStoreManager = new class extends MockStoreManager {
+            public function getStore($storeId = null) {
+                return new class implements \Magento\Store\Api\Data\StoreInterface {
+                    public function getId() { return 2; }
+                    public function getCode() { return 'fr'; }
+                    public function getName() { return 'French Store'; }
+                    public function getWebsiteId() { return 1; }
+                    public function getStoreGroupId() { return 1; }
+                    public function getIsActive() { return true; }
+                    public function getSortOrder() { return 0; }
+                    public function setId($id) { return $this; }
+                    public function setCode($code) { return $this; }
+                    public function setName($name) { return $this; }
+                    public function setWebsiteId($websiteId) { return $this; }
+                    public function setStoreGroupId($storeGroupId) { return $this; }
+                    public function setIsActive($isActive) { return $this; }
+                    public function setSortOrder($sortOrder) { return $this; }
+                    public function getExtensionAttributes() { return null; }
+                    public function setExtensionAttributes(\Magento\Store\Api\Data\StoreExtensionInterface $extensionAttributes) { return $this; }
+                };
+            }
+        };
+        
+        // Create store-specific folder
+        $storeFolder = BP . '/pub/static/fr';
+        $folderExists = is_dir($storeFolder);
+        if (!$folderExists) {
+            mkdir($storeFolder, 0755, true);
+        }
+        
+        try {
+            $helper = new ReactInjectPluginTestHelper([
+                'storeManager' => $mockStoreManager
+            ]);
+            
+            // Initialize asset variables
+            $helper->callMethod('initializeAssetVariables');
+            
+            // Simulate processMobileCSS for category page
+            $requestContext = [
+                'actionName' => 'catalog_category_view',
+                'removeController' => true,
+            ];
+            $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false];
+            $baseURL = 'http://localhost/pub/static/';
+            
+            // Create mock asset
+            $mockAsset = new class {
+                public function getUrl() {
+                    return 'http://localhost/pub/static/styles-m.css';
+                }
+            };
+            
+            $assets = [0 => $mockAsset];
+            $key = 0;
+            
+            // Call processMobileCSS
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            // Category URLs should include store code prefix when folder exists
+            expect($assetVars['optimisedCategoryCSSFileUrl'])->toContain('fr/category-styles-m')
+                ->and($assetVars['optimisedCategoryCSSFileCriticalUrl'])->toContain('fr/category-critical-m');
+            
+            // Now test home page
+            $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+            $helper->callMethod('initializeAssetVariables');
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            // Home URLs should include store code prefix when folder exists
+            expect($assetVars['optimisedHomeCSSFileUrl'])->toContain('fr/home-styles-m')
+                ->and($assetVars['optimisedHomeCSSFileCriticalUrl'])->toContain('fr/home-critical-m');
+        } finally {
+            // Clean up folder if we created it
+            if (!$folderExists && is_dir($storeFolder)) {
+                rmdir($storeFolder);
+            }
+        }
+    });
+    
+    test('non-default store falls back to default store when store-specific folder does not exist', function () {
+        // Create store manager that returns 'es' store code (Spanish store)
+        $mockStoreManager = new class extends MockStoreManager {
+            public function getStore($storeId = null) {
+                return new class implements \Magento\Store\Api\Data\StoreInterface {
+                    public function getId() { return 4; }
+                    public function getCode() { return 'es'; }
+                    public function getName() { return 'Spanish Store'; }
+                    public function getWebsiteId() { return 1; }
+                    public function getStoreGroupId() { return 1; }
+                    public function getIsActive() { return true; }
+                    public function getSortOrder() { return 0; }
+                    public function setId($id) { return $this; }
+                    public function setCode($code) { return $this; }
+                    public function setName($name) { return $this; }
+                    public function setWebsiteId($websiteId) { return $this; }
+                    public function setStoreGroupId($storeGroupId) { return $this; }
+                    public function setIsActive($isActive) { return $this; }
+                    public function setSortOrder($sortOrder) { return $this; }
+                    public function getExtensionAttributes() { return null; }
+                    public function setExtensionAttributes(\Magento\Store\Api\Data\StoreExtensionInterface $extensionAttributes) { return $this; }
+                };
+            }
+        };
+        
+        // Ensure store-specific folder does NOT exist
+        $storeFolder = BP . '/pub/static/es';
+        $folderExisted = is_dir($storeFolder);
+        if ($folderExisted) {
+            // Temporarily rename it
+            rename($storeFolder, $storeFolder . '.backup');
+        }
+        
+        try {
+            $helper = new ReactInjectPluginTestHelper([
+                'storeManager' => $mockStoreManager
+            ]);
+            
+            // Initialize asset variables
+            $helper->callMethod('initializeAssetVariables');
+            
+            // Simulate processMobileCSS for product page
+            $requestContext = [
+                'actionName' => 'catalog_product_view',
+                'removeController' => true,
+            ];
+            $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+            $baseURL = 'http://localhost/pub/static/';
+            
+            // Create mock asset
+            $mockAsset = new class {
+                public function getUrl() {
+                    return 'http://localhost/pub/static/styles-m.css';
+                }
+            };
+            
+            $assets = [0 => $mockAsset];
+            $key = 0;
+            
+            // Call processMobileCSS
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            // URLs should NOT include store code prefix (fallback to default)
+            expect($assetVars['optimisedProductCSSFileUrl'])->toContain('product-styles-m.css')
+                ->and($assetVars['optimisedProductCSSFileUrl'])->not->toContain('es/')
+                ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->toContain('product-critical-m.css')
+                ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->not->toContain('es/');
+            
+            // File paths should point to default store location
+            expect($assetVars['optimisedProductCSSFileCriticalPath'])->toContain('/pub/static/product-critical-m.css')
+                ->and($assetVars['optimisedProductCSSFileCriticalPath'])->not->toContain('/es/');
+        } finally {
+            // Restore folder if it existed
+            if ($folderExisted && is_dir($storeFolder . '.backup')) {
+                rename($storeFolder . '.backup', $storeFolder);
+            }
+        }
+    });
+    
+    test('multiple stores: store without folder falls back to default for all page types', function () {
+        // Test scenario: Store 'it' (Italian) doesn't have folder, should fallback to default
+        $mockStoreManager = new class extends MockStoreManager {
+            public function getStore($storeId = null) {
+                return new class implements \Magento\Store\Api\Data\StoreInterface {
+                    public function getId() { return 5; }
+                    public function getCode() { return 'it'; }
+                    public function getName() { return 'Italian Store'; }
+                    public function getWebsiteId() { return 1; }
+                    public function getStoreGroupId() { return 1; }
+                    public function getIsActive() { return true; }
+                    public function getSortOrder() { return 0; }
+                    public function setId($id) { return $this; }
+                    public function setCode($code) { return $this; }
+                    public function setName($name) { return $this; }
+                    public function setWebsiteId($websiteId) { return $this; }
+                    public function setStoreGroupId($storeGroupId) { return $this; }
+                    public function setIsActive($isActive) { return $this; }
+                    public function setSortOrder($sortOrder) { return $this; }
+                    public function getExtensionAttributes() { return null; }
+                    public function setExtensionAttributes(\Magento\Store\Api\Data\StoreExtensionInterface $extensionAttributes) { return $this; }
+                };
+            }
+        };
+        
+        // Ensure store-specific folder does NOT exist
+        $storeFolder = BP . '/pub/static/it';
+        $folderExisted = is_dir($storeFolder);
+        if ($folderExisted) {
+            rename($storeFolder, $storeFolder . '.backup');
+        }
+        
+        try {
+            $helper = new ReactInjectPluginTestHelper([
+                'storeManager' => $mockStoreManager
+            ]);
+            
+            $baseURL = 'http://localhost/pub/static/';
+            $mockAsset = new class {
+                public function getUrl() {
+                    return 'http://localhost/pub/static/styles-m.css';
+                }
+            };
+            $assets = [0 => $mockAsset];
+            $key = 0;
+            
+            // Test Product page fallback
+            $helper->callMethod('initializeAssetVariables');
+            $requestContext = ['actionName' => 'catalog_product_view', 'removeController' => true];
+            $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            expect($assetVars['optimisedProductCSSFileUrl'])->not->toContain('it/')
+                ->and($assetVars['optimisedProductCSSFileUrl'])->toContain('product-styles-m')
+                ->and($assetVars['optimisedProductCSSFileCriticalPath'])->not->toContain('/it/')
+                ->and($assetVars['optimisedProductCSSFileCriticalPath'])->toContain('/pub/static/product-critical-m');
+            
+            // Test Category page fallback
+            $helper->callMethod('initializeAssetVariables');
+            $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false];
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            expect($assetVars['optimisedCategoryCSSFileUrl'])->not->toContain('it/')
+                ->and($assetVars['optimisedCategoryCSSFileUrl'])->toContain('category-styles-m')
+                ->and($assetVars['optimisedCategoryCSSFileCriticalPath'])->not->toContain('/it/')
+                ->and($assetVars['optimisedCategoryCSSFileCriticalPath'])->toContain('/pub/static/category-critical-m');
+            
+            // Test Home page fallback
+            $helper->callMethod('initializeAssetVariables');
+            $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            expect($assetVars['optimisedHomeCSSFileUrl'])->not->toContain('it/')
+                ->and($assetVars['optimisedHomeCSSFileUrl'])->toContain('home-styles-m')
+                ->and($assetVars['optimisedHomeCSSFileCriticalPath'])->not->toContain('/it/')
+                ->and($assetVars['optimisedHomeCSSFileCriticalPath'])->toContain('/pub/static/home-critical-m');
+        } finally {
+            // Restore folder if it existed
+            if ($folderExisted && is_dir($storeFolder . '.backup')) {
+                rename($storeFolder . '.backup', $storeFolder);
+            }
+        }
     });
 });
 
