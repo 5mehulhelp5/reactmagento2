@@ -520,13 +520,19 @@ class ReactInjectPlugin extends Renderer
     private function addProductCSSLinks(string $result, array $pageTypes): string
     {
         if ($this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
-            if ($this->assetVariables['optimisedProductCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath'])) {
+            // Check if critical CSS file exists
+            $criticalCSSExists = $this->assetVariables['optimisedProductCSSFileCriticalPath'] 
+                && $this->checkFile($this->assetVariables['optimisedProductCSSFileCriticalPath']);
+            
+            if ($criticalCSSExists) {
+                // Critical CSS exists: load critical CSS + optimized CSS with print media trick
                 if (!$this->configuration['criticalCSSHTML']) {
                     @header('Link: <' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '>; rel=preload; as=style', false);
                     $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedProductCSSFileCriticalUrl'] . '" />' . "\n" . $result;
                 }
                 $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
             } else {
+                // Critical CSS doesn't exist: load optimized CSS as regular stylesheet (no print media trick)
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetProductOptimized'] . '" />' . "\n" . $result;
             }
         } elseif (!$this->assetVariables['assetProductOptimized'] && $pageTypes['isProduct']) {
@@ -547,10 +553,16 @@ class ReactInjectPlugin extends Renderer
     private function addCategoryCSSLinks(string $result, array $pageTypes): string
     {
         if ($this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
-            if ($this->assetVariables['optimisedCategoryCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath'])) {
+            // Check if critical CSS file exists
+            $criticalCSSExists = $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] 
+                && $this->checkFile($this->assetVariables['optimisedCategoryCSSFileCriticalPath']);
+            
+            if ($criticalCSSExists) {
+                // Critical CSS exists: load critical CSS + optimized CSS with print media trick
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] . '" />' . "\n" . $result;
                 $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetCategoryOptimized'] . '" />' . "\n" . $result;
             } else {
+                // Critical CSS doesn't exist: load optimized CSS as regular stylesheet (no print media trick)
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetCategoryOptimized'] . '" />' . "\n" . $result;
             }
         } elseif (!$this->assetVariables['assetCategoryOptimized'] && $pageTypes['isCategory']) {
@@ -571,13 +583,19 @@ class ReactInjectPlugin extends Renderer
     private function addHomePageCSSLinks(string $result, array $pageTypes): string
     {
         if ($this->assetVariables['assetHomeOptimized'] && $pageTypes['isHome']) {
-            if ($this->assetVariables['optimisedHomeCSSFileCriticalPath'] && $this->checkFile($this->assetVariables['optimisedHomeCSSFileCriticalPath'])) {
+            // Check if critical CSS file exists
+            $criticalCSSExists = $this->assetVariables['optimisedHomeCSSFileCriticalPath'] 
+                && $this->checkFile($this->assetVariables['optimisedHomeCSSFileCriticalPath']);
+            
+            if ($criticalCSSExists) {
+                // Critical CSS exists: load critical CSS + optimized CSS with print media trick
                 if (!$this->configuration['criticalCSSHTML']) {
                     @header('Link: <' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '>; rel=preload; as=style', false);
                     $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] . '" />' . "\n" . $result;
                 }
                 $result = '<link rel="stylesheet" media="print" onload="this.onload=null;this.media=\'all\';" href="' . $this->assetVariables['assetHomeOptimized'] . '" />' . "\n" . $result;
             } else {
+                // Critical CSS doesn't exist: load optimized CSS as regular stylesheet (no print media trick)
                 $result = '<link rel="stylesheet" type="text/css" media="all" href="' . $this->assetVariables['assetHomeOptimized'] . '" />' . "\n" . $result;
             }
         } elseif (!$this->assetVariables['assetHomeOptimized'] && $pageTypes['isHome']) {
