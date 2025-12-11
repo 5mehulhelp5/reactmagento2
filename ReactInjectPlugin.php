@@ -233,33 +233,70 @@ class ReactInjectPlugin extends Renderer
 
             // Set up optimized file paths and URLs
             $optimisedCSSFileUrl = $baseURL . 'styles-m.css';
-            if ($this->isMinifyEnabled()) {
-                $optimisedCSSFileUrl = $baseURL . 'styles-m.min.css';
-            }
             $optimisedCSSFilePath = BP . '/pub/static/styles-m.css';
+            if ($this->isMinifyEnabled()) {
+                $minifiedPath = BP . '/pub/static/styles-m.min.css';
+                if ($this->checkFile($minifiedPath)) {
+                    $optimisedCSSFileUrl = $baseURL . 'styles-m.min.css';
+                    $optimisedCSSFilePath = $minifiedPath;
+                }
+            }
 
+            // Product CSS paths
             $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.css';
             $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.css';
             $this->assetVariables['optimisedProductCSSFileCriticalPath'] = BP . '/pub/static/product-critical-m.css';
             $optimisedProductCSSFilePath = BP . '/pub/static/product-styles-m.css';
 
+            // Category CSS paths
             $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.css';
             $optimisedCategoryCSSFilePath = BP . '/pub/static/category-styles-m.css';
             $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.css';
             $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = BP . '/pub/static/category-critical-m.css';
 
+            // Home CSS paths
             $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . 'home-styles-m.css';
             $optimisedHomeCSSFilePath = BP . '/pub/static/home-styles-m.css';
             $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . 'home-critical-m.css';
             $this->assetVariables['optimisedHomeCSSFileCriticalPath'] = BP . '/pub/static/home-critical-m.css';
 
+            // If minification is enabled, try minified versions and fallback to regular if not found
             if ($this->isMinifyEnabled()) {
-                $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.min.css';
-                $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.min.css';
-                $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.min.css';
-                $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.min.css';
-                $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . 'home-styles-m.min.css';
-                $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . 'home-critical-m.min.css';
+                // Product CSS - check if minified exists, otherwise keep regular
+                $minifiedProductPath = BP . '/pub/static/product-styles-m.min.css';
+                $minifiedProductCriticalPath = BP . '/pub/static/product-critical-m.min.css';
+                if ($this->checkFile($minifiedProductPath)) {
+                    $this->assetVariables['optimisedProductCSSFileUrl'] = $baseURL . 'product-styles-m.min.css';
+                    $optimisedProductCSSFilePath = $minifiedProductPath;
+                }
+                if ($this->checkFile($minifiedProductCriticalPath)) {
+                    $this->assetVariables['optimisedProductCSSFileCriticalUrl'] = $baseURL . 'product-critical-m.min.css';
+                    $this->assetVariables['optimisedProductCSSFileCriticalPath'] = $minifiedProductCriticalPath;
+                }
+
+                // Category CSS - check if minified exists, otherwise keep regular
+                $minifiedCategoryPath = BP . '/pub/static/category-styles-m.min.css';
+                $minifiedCategoryCriticalPath = BP . '/pub/static/category-critical-m.min.css';
+                if ($this->checkFile($minifiedCategoryPath)) {
+                    $this->assetVariables['optimisedCategoryCSSFileUrl'] = $baseURL . 'category-styles-m.min.css';
+                    $optimisedCategoryCSSFilePath = $minifiedCategoryPath;
+                }
+                if ($this->checkFile($minifiedCategoryCriticalPath)) {
+                    $this->assetVariables['optimisedCategoryCSSFileCriticalUrl'] = $baseURL . 'category-critical-m.min.css';
+                    $this->assetVariables['optimisedCategoryCSSFileCriticalPath'] = $minifiedCategoryCriticalPath;
+                }
+
+                // Home CSS - check if minified exists, otherwise keep regular
+                $minifiedHomePath = BP . '/pub/static/home-styles-m.min.css';
+                $minifiedHomeCriticalPath = BP . '/pub/static/home-critical-m.min.css';
+                if ($this->checkFile($minifiedHomePath)) {
+                    $this->assetVariables['optimisedHomeCSSFileUrl'] = $baseURL . 'home-styles-m.min.css';
+                    $optimisedHomeCSSFilePath = $minifiedHomePath;
+                }
+                if ($this->checkFile($minifiedHomeCriticalPath)) {
+                    $this->assetVariables['optimisedHomeCSSFileCriticalUrl'] = $baseURL . 'home-critical-m.min.css';
+                    $this->assetVariables['optimisedHomeCSSFileCriticalPath'] = $minifiedHomeCriticalPath;
+                }
             }
 
             // Check and set optimized assets

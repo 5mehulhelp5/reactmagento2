@@ -938,7 +938,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
             'actionName' => 'catalog_product_view',
             'removeController' => true,
         ];
-        $pageTypes = ['isProduct' => true, 'isCategory' => false];
+        $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
         $baseURL = 'http://localhost/pub/static/';
         
         // Create mock asset
@@ -960,7 +960,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         // CSS files may be minified (.min.css) or not (.css) depending on config
         expect($assetVars['optimisedProductCSSFileUrl'])->toContain('product-styles-m')
             ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->toContain('product-critical-m')
-            ->and($assetVars['optimisedProductCSSFileCriticalPath'])->toContain('product-critical-m.css');
+            ->and($assetVars['optimisedProductCSSFileCriticalPath'])->toMatch('/product-critical-m(\.min)?\.css/');
         
     });
     
@@ -975,7 +975,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
             'actionName' => 'catalog_category_view',
             'removeController' => true,
         ];
-        $pageTypes = ['isProduct' => false, 'isCategory' => true];
+        $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false];
         $baseURL = 'http://localhost/pub/static/';
         
         // Create mock asset
@@ -997,7 +997,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         // CSS files may be minified (.min.css) or not (.css) depending on config
         expect($assetVars['optimisedCategoryCSSFileUrl'])->toContain('category-styles-m')
             ->and($assetVars['optimisedCategoryCSSFileCriticalUrl'])->toContain('category-critical-m')
-            ->and($assetVars['optimisedCategoryCSSFileCriticalPath'])->toContain('category-critical-m.css');
+            ->and($assetVars['optimisedCategoryCSSFileCriticalPath'])->toMatch('/category-critical-m(\.min)?\.css/');
         
     });
     
@@ -1012,7 +1012,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
             'actionName' => 'catalogsearch_result_index',
             'removeController' => true,
         ];
-        $pageTypes = ['isProduct' => false, 'isCategory' => true]; // Search is treated as category
+        $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false]; // Search is treated as category
         $baseURL = 'http://localhost/pub/static/';
         
         // Create mock asset
@@ -1068,7 +1068,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         // CSS files may be minified (.min.css) or not (.css) depending on config
         expect($assetVars['optimisedHomeCSSFileUrl'])->toContain('home-styles-m')
             ->and($assetVars['optimisedHomeCSSFileCriticalUrl'])->toContain('home-critical-m')
-            ->and($assetVars['optimisedHomeCSSFileCriticalPath'])->toContain('home-critical-m.css');
+            ->and($assetVars['optimisedHomeCSSFileCriticalPath'])->toMatch('/home-critical-m(\.min)?\.css/');
         
     });
     
@@ -1092,7 +1092,7 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
         
         // Mock checkFile to return true for critical CSS
         // We need to create a subclass that overrides checkFile
-        $pageTypes = ['isProduct' => true, 'isCategory' => false];
+        $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
         $result = '';
         
         // Test addProductCSSLinks - this will check if file exists
@@ -1284,6 +1284,244 @@ describe('ReactInjectPlugin - Per-Page CSS Optimization Tests', function () {
     });
 });
 
+describe('ReactInjectPlugin - Minification Fallback Tests', function () {
+    test('falls back to regular CSS when minification enabled but minified file does not exist', function () {
+        $mockScopeConfig = new MockScopeConfig();
+        $mockTemplate = new MockTemplate($mockScopeConfig);
+        $mockTemplate->setData('minify', true); // Enable minification
+        
+        // Temporarily rename minified files to test fallback
+        $minifiedProductFile = BP . '/pub/static/product-styles-m.min.css';
+        $minifiedProductCriticalFile = BP . '/pub/static/product-critical-m.min.css';
+        $backupProductFile = $minifiedProductFile . '.backup';
+        $backupProductCriticalFile = $minifiedProductCriticalFile . '.backup';
+        
+        $productFileExists = file_exists($minifiedProductFile);
+        $productCriticalFileExists = file_exists($minifiedProductCriticalFile);
+        
+        if ($productFileExists) {
+            rename($minifiedProductFile, $backupProductFile);
+        }
+        if ($productCriticalFileExists) {
+            rename($minifiedProductCriticalFile, $backupProductCriticalFile);
+        }
+        
+        try {
+            $helper = new ReactInjectPluginTestHelper([
+                'template' => $mockTemplate
+            ]);
+            
+            // Initialize asset variables
+            $helper->callMethod('initializeAssetVariables');
+            
+            // Simulate processMobileCSS for product page
+            $requestContext = [
+                'actionName' => 'catalog_product_view',
+                'removeController' => true,
+            ];
+            $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+            $baseURL = 'http://localhost/pub/static/';
+            
+            // Create mock asset
+            $mockAsset = new class {
+                public function getUrl() {
+                    return 'http://localhost/pub/static/styles-m.css';
+                }
+            };
+            
+            $assets = [0 => $mockAsset];
+            $key = 0;
+            
+            // Call processMobileCSS - minified file doesn't exist, should fallback to regular
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            // Should use regular CSS (not minified) since minified file doesn't exist
+            expect($assetVars['optimisedProductCSSFileUrl'])->toContain('product-styles-m.css')
+                ->and($assetVars['optimisedProductCSSFileUrl'])->not->toContain('.min.css')
+                ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->toContain('product-critical-m.css')
+                ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->not->toContain('.min.css');
+        } finally {
+            // Restore minified files
+            if ($productFileExists && file_exists($backupProductFile)) {
+                rename($backupProductFile, $minifiedProductFile);
+            }
+            if ($productCriticalFileExists && file_exists($backupProductCriticalFile)) {
+                rename($backupProductCriticalFile, $minifiedProductCriticalFile);
+            }
+        }
+    });
+    
+    test('falls back to regular CSS for category when minification enabled but minified file does not exist', function () {
+        $mockScopeConfig = new MockScopeConfig();
+        $mockTemplate = new MockTemplate($mockScopeConfig);
+        $mockTemplate->setData('minify', true); // Enable minification
+        
+        // Temporarily rename minified files to test fallback
+        $minifiedCategoryFile = BP . '/pub/static/category-styles-m.min.css';
+        $minifiedCategoryCriticalFile = BP . '/pub/static/category-critical-m.min.css';
+        $backupCategoryFile = $minifiedCategoryFile . '.backup';
+        $backupCategoryCriticalFile = $minifiedCategoryCriticalFile . '.backup';
+        
+        $categoryFileExists = file_exists($minifiedCategoryFile);
+        $categoryCriticalFileExists = file_exists($minifiedCategoryCriticalFile);
+        
+        if ($categoryFileExists) {
+            rename($minifiedCategoryFile, $backupCategoryFile);
+        }
+        if ($categoryCriticalFileExists) {
+            rename($minifiedCategoryCriticalFile, $backupCategoryCriticalFile);
+        }
+        
+        try {
+            $helper = new ReactInjectPluginTestHelper([
+                'template' => $mockTemplate
+            ]);
+            
+            // Initialize asset variables
+            $helper->callMethod('initializeAssetVariables');
+            
+            // Simulate processMobileCSS for category page
+            $requestContext = [
+                'actionName' => 'catalog_category_view',
+                'removeController' => true,
+            ];
+            $pageTypes = ['isProduct' => false, 'isCategory' => true, 'isHome' => false];
+            $baseURL = 'http://localhost/pub/static/';
+            
+            // Create mock asset
+            $mockAsset = new class {
+                public function getUrl() {
+                    return 'http://localhost/pub/static/styles-m.css';
+                }
+            };
+            
+            $assets = [0 => $mockAsset];
+            $key = 0;
+            
+            // Call processMobileCSS - minified file doesn't exist, should fallback to regular
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            // Should use regular CSS (not minified) since minified file doesn't exist
+            expect($assetVars['optimisedCategoryCSSFileUrl'])->toContain('category-styles-m.css')
+                ->and($assetVars['optimisedCategoryCSSFileUrl'])->not->toContain('.min.css')
+                ->and($assetVars['optimisedCategoryCSSFileCriticalUrl'])->toContain('category-critical-m.css')
+                ->and($assetVars['optimisedCategoryCSSFileCriticalUrl'])->not->toContain('.min.css');
+        } finally {
+            // Restore minified files
+            if ($categoryFileExists && file_exists($backupCategoryFile)) {
+                rename($backupCategoryFile, $minifiedCategoryFile);
+            }
+            if ($categoryCriticalFileExists && file_exists($backupCategoryCriticalFile)) {
+                rename($backupCategoryCriticalFile, $minifiedCategoryCriticalFile);
+            }
+        }
+    });
+    
+    test('falls back to regular CSS for home page when minification enabled but minified file does not exist', function () {
+        $mockScopeConfig = new MockScopeConfig();
+        $mockTemplate = new MockTemplate($mockScopeConfig);
+        $mockTemplate->setData('minify', true); // Enable minification
+        
+        $helper = new ReactInjectPluginTestHelper([
+            'template' => $mockTemplate
+        ]);
+        
+        // Initialize asset variables
+        $helper->callMethod('initializeAssetVariables');
+        
+        // Simulate processMobileCSS for home page
+        $requestContext = [
+            'actionName' => 'cms_index_index',
+            'removeController' => true,
+        ];
+        $pageTypes = ['isProduct' => false, 'isCategory' => false, 'isHome' => true];
+        $baseURL = 'http://localhost/pub/static/';
+        
+        // Create mock asset
+        $mockAsset = new class {
+            public function getUrl() {
+                return 'http://localhost/pub/static/styles-m.css';
+            }
+        };
+        
+        $assets = [0 => $mockAsset];
+        $key = 0;
+        
+        // Call processMobileCSS - minified file doesn't exist, should fallback to regular
+        $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+        
+        $assetVars = $helper->getProperty('assetVariables');
+        
+        // Should use regular CSS (not minified) since minified file doesn't exist
+        expect($assetVars['optimisedHomeCSSFileUrl'])->toContain('home-styles-m.css')
+            ->and($assetVars['optimisedHomeCSSFileUrl'])->not->toContain('.min.css')
+            ->and($assetVars['optimisedHomeCSSFileCriticalUrl'])->toContain('home-critical-m.css')
+            ->and($assetVars['optimisedHomeCSSFileCriticalUrl'])->not->toContain('.min.css');
+    });
+    
+    test('uses minified CSS when minification enabled and minified file exists', function () {
+        $mockScopeConfig = new MockScopeConfig();
+        $mockTemplate = new MockTemplate($mockScopeConfig);
+        $mockTemplate->setData('minify', true); // Enable minification
+        
+        $helper = new ReactInjectPluginTestHelper([
+            'template' => $mockTemplate
+        ]);
+        
+        // Create a temporary minified file to test
+        $minifiedFile = BP . '/pub/static/product-styles-m.min.css';
+        $minifiedCriticalFile = BP . '/pub/static/product-critical-m.min.css';
+        
+        // Create temporary files
+        file_put_contents($minifiedFile, '/* minified */');
+        file_put_contents($minifiedCriticalFile, '/* minified critical */');
+        
+        try {
+            // Initialize asset variables
+            $helper->callMethod('initializeAssetVariables');
+            
+            // Simulate processMobileCSS for product page
+            $requestContext = [
+                'actionName' => 'catalog_product_view',
+                'removeController' => true,
+            ];
+            $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
+            $baseURL = 'http://localhost/pub/static/';
+            
+            // Create mock asset
+            $mockAsset = new class {
+                public function getUrl() {
+                    return 'http://localhost/pub/static/styles-m.css';
+                }
+            };
+            
+            $assets = [0 => $mockAsset];
+            $key = 0;
+            
+            // Call processMobileCSS - minified file exists, should use minified
+            $helper->callMethod('processMobileCSS', $assets, $key, $mockAsset, $requestContext, $pageTypes, $baseURL);
+            
+            $assetVars = $helper->getProperty('assetVariables');
+            
+            // Should use minified CSS since file exists
+            expect($assetVars['optimisedProductCSSFileUrl'])->toContain('product-styles-m.min.css')
+                ->and($assetVars['optimisedProductCSSFileCriticalUrl'])->toContain('product-critical-m.min.css');
+        } finally {
+            // Clean up temporary files
+            if (file_exists($minifiedFile)) {
+                unlink($minifiedFile);
+            }
+            if (file_exists($minifiedCriticalFile)) {
+                unlink($minifiedCriticalFile);
+            }
+        }
+    });
+});
+
 describe('ReactInjectPlugin - Configuration Variants Tests', function () {
     test('all config variants are checked correctly', function () {
         $helper = new ReactInjectPluginTestHelper();
@@ -1355,7 +1593,7 @@ describe('ReactInjectPlugin - Configuration Variants Tests', function () {
             'actionName' => 'checkout_cart_index',
             'removeController' => false,
         ];
-        $pageTypes = ['isProduct' => true, 'isCategory' => false];
+        $pageTypes = ['isProduct' => true, 'isCategory' => false, 'isHome' => false];
         
         // Test that processMobileCSS checks actionFilter
         // Since we can't easily test the full flow, we verify the logic
