@@ -25,7 +25,7 @@ if (!defined('BP')) {
 // STEP 1: Load Pest's autoloader FIRST (includes PHPUnit 10+)
 echo "Loading Pest dependencies (with PHPUnit 10+)...\n";
 require_once __DIR__ . '/vendor/autoload.php';
-echo "✓ Pest's PHPUnit loaded\n";
+echo "Pest's PHPUnit loaded\n";
 
 // STEP 2: Register custom autoloader for Magento classes (SKIP Magento's vendor/autoload.php!)
 // We don't load Magento's vendor/autoload.php because it would override Pest's PHPUnit
@@ -91,6 +91,10 @@ spl_autoload_register(function ($class) {
             $moduleName = 'module-' . strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $parts[1]));
             $subPath = implode('/', array_slice($parts, 2));
             $file = BP . '/vendor/magento/' . $moduleName . '/' . $subPath . '.php';
+            if (!file_exists($file) && strpos(BP, '/vendor/genaker') !== false) {
+                // Try going up 2 levels from BP to react-luma root
+                $file = dirname(BP, 2) . '/vendor/magento/' . $moduleName . '/' . $subPath . '.php';
+            }
             if (file_exists($file)) {
                 require_once $file;
                 return true;
@@ -99,7 +103,12 @@ spl_autoload_register(function ($class) {
             // Also try framework path: Magento\Framework\... -> vendor/magento/framework/...
             if ($parts[1] === 'Framework') {
                 $subPath = implode('/', array_slice($parts, 2));
+                // BP might be vendor/genaker, so try going up to react-luma root
                 $file = BP . '/vendor/magento/framework/' . $subPath . '.php';
+                if (!file_exists($file) && strpos(BP, '/vendor/genaker') !== false) {
+                    // Try going up 2 levels from BP to react-luma root
+                    $file = dirname(BP, 2) . '/vendor/magento/framework/' . $subPath . '.php';
+                }
                 if (file_exists($file)) {
                     require_once $file;
                     return true;
@@ -122,14 +131,16 @@ spl_autoload_register(function ($class) {
 
 echo "✓ Magento class autoloader registered (PHPUnit excluded)\n";
 
-// STEP 4: Verify our class is available
-$classExists = class_exists('React\React\ReactInjectPlugin');
-echo "ReactInjectPlugin class exists: " . ($classExists ? 'YES ✓' : 'NO ✗') . "\n";
+// STEP 4: Verify our class is available (skip if class doesn't exist to avoid autoload errors)
+$classExists = @class_exists('React\React\ReactInjectPlugin', false);
+if ($classExists) {
+    echo "ReactInjectPlugin class exists: YES\n";
+}
 
 // Check PHPUnit version
 $reflection = new ReflectionClass('PHPUnit\Framework\TestCase');
 $phpunitFile = $reflection->getFileName();
-echo "PHPUnit loaded from: " . (strpos($phpunitFile, 'reactmagento2/vendor') !== false ? 'PEST ✓' : 'MAGENTO ✗') . "\n";
+echo "PHPUnit loaded from: " . (strpos($phpunitFile, 'reactmagento2/vendor') !== false ? 'PEST' : 'MAGENTO') . "\n";
 echo "PHPUnit file: " . $phpunitFile . "\n";
 
 echo "========== BOOTSTRAP COMPLETE ==========\n\n";
@@ -177,8 +188,8 @@ if (class_exists('Magento\Framework\App\ObjectManager')) {
         $property = $reflection->getProperty('_instance');
         $property->setAccessible(true);
         $property->setValue(null, $mockObjectManager);
-        echo "✓ Mock ObjectManager initialized\n";
+        echo "Mock ObjectManager initialized\n";
     } catch (\Exception $e) {
-        echo "⚠ Could not set mock ObjectManager: " . $e->getMessage() . "\n";
+        echo "WARNING: Could not set mock ObjectManager: " . $e->getMessage() . "\n";
     }
 }

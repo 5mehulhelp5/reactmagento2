@@ -1,0 +1,9 @@
+{
+  "styles.css": {
+    "options": {
+      "ignore": [
+        ".debug-*"
+      ]
+    }
+  }
+}

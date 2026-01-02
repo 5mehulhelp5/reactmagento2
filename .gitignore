@@ -89,3 +89,6 @@ jspm_packages/
 
 # TernJS port file
 .tern-port 
+.phpunit.result.cache
+composer.lock
+package-lock.json

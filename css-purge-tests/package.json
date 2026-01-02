@@ -1,0 +1,22 @@
+{
+  "name": "css-purge-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Tests for css-purge.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/*.test.js"],
+    "collectCoverageFrom": ["../css-purge.js"],
+    "coveragePathIgnorePatterns": ["/node_modules/", "/tests/"]
+  }
+}

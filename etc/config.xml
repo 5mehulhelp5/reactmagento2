@@ -13,10 +13,12 @@
 			</gridjs>
 			<junk>
 				<remove>1</remove>
+				<defer_js>1</defer_js>
 			</junk>
 			<css>
 				<remove>1</remove>
 				<critical>1</critical>
+				<defer_css>1</defer_css>
 			</css>
 		</react_vue_config>
 	</default>

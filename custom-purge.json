@@ -1,0 +1,21 @@
+{
+  "content": {
+    "urls": [
+      "https://react-luma.cnxt.link"
+    ],
+    "paths": [
+      "content/react_luma_cnxt_link_1.html"
+    ]
+  },
+  "options": {
+    "safelist": [
+      "html",
+      "body",
+      "head",
+      "script",
+      "style",
+      "page-wrapper",
+      "page-main"
+    ]
+  }
+} 

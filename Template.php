@@ -82,6 +82,21 @@ class Template extends MTemplate
         return boolval($this->config->getValue('react_vue_config/junk/remove'));
     }
 
+    public function deferJS()
+    {
+        // Check GET parameter first
+        if (isset($_GET['defer-js']) && $_GET['defer-js'] === "false") {
+            return false;
+        }
+        if (isset($_GET['defer-js']) && $_GET['defer-js'] === "true") {
+            return true;
+        }
+        
+        // Fall back to config (default to true if not set)
+        $configValue = $this->config->getValue('react_vue_config/junk/defer_js');
+        return $configValue === null || $configValue === '' ? true : boolval($configValue);
+    }
+
     public function getInlineJs($file) {
         $jsContent = file_get_contents(__DIR__ . '/view/frontend/web/js/' . $file);
         return '<script>' . $jsContent . '</script>';

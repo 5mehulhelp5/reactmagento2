@@ -1,0 +1,38 @@
+{
+  "styles.css": {
+    "content": {
+      "urls": [
+        "https://example.com"
+      ]
+    },
+    "options": {
+      "ignore": [
+        ".debug-*"
+      ]
+    }
+  },
+  "styles-m.css": {
+    "content": {
+      "paths": [
+        "./templates/*.html"
+      ]
+    },
+    "options": {
+      "blocklist": [
+        ".deprecated-*"
+      ]
+    }
+  },
+  "custom.css": {
+    "content": {
+      "urls": [
+        "https://test.com"
+      ]
+    },
+    "options": {
+      "safelist": [
+        ".important"
+      ]
+    }
+  }
+}

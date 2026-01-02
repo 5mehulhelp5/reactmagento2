@@ -1,0 +1,26 @@
+{
+  "test.css": {
+    "content": {
+      "urls": [
+        "https://example.com"
+      ],
+      "paths": [
+        "./content/*.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        ".safelist-class",
+        ".always-keep"
+      ],
+      "ignore": [
+        ".debug-*",
+        ".test-*"
+      ],
+      "blocklist": [
+        ".deprecated-*",
+        ".legacy-*"
+      ]
+    }
+  }
+}

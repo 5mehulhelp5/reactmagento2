@@ -71,7 +71,6 @@ The module supports store-specific CSS files for multi-store setups. By default,
 
 The module automatically detects the current store code and loads the appropriate CSS files. If store-specific files don't exist, it falls back to the default store files. This allows you to customize styles per store while maintaining a fallback mechanism.
 
-
 # VueJS support 
 
 ![Logo-Vuejs](https://user-images.githubusercontent.com/9213670/150036919-3486e016-3d37-4ffd-b4ee-a3a3bbc961e9.png)

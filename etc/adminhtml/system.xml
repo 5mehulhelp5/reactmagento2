@@ -39,6 +39,12 @@
 					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 					<comment>Remove Magento's default JS garbage (Require,Knokout,jQuery). You will need implement required functionality or use Magento Open Source ReactJS Luma Theme</comment>
 				</field>
+				<field id="defer_js" type="select"  sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Defer JS (Move Scripts to Bottom)</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+					<comment>Move JavaScript files to the bottom of the page for better performance. Scripts with no-defer attribute are preserved in their original position. Use GET parameter ?defer-js=true/false to override.</comment>
+					<config_path>react_vue_config/junk/defer_js</config_path>
+				</field>
 			</group>
 			<group id="css" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
 				<label>Magento CSS configuration</label>
@@ -51,6 +57,12 @@
 					<label>CSS to HTML</label>
 					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 					<comment>Output Critical CSS to HTML</comment>
+				</field>
+				<field id="defer_css" type="select"  sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Defer CSS (styles-l.css)</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+					<comment>Desktop: Loads synchronously using document.write() (blocking, before FCP). Mobile: Loads asynchronously with 1500ms delay. Only applies to stylesheets with desktop media queries (min-width). Use GET parameter ?defer-css=true/false to override.</comment>
+					<config_path>react_vue_config/css/defer_css</config_path>
 				</field>
 			</group>
 		</section>

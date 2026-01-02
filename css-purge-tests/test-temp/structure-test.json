@@ -1,0 +1,25 @@
+{
+  "styles.css": {
+    "content": {
+      "urls": [
+        "https://example.com"
+      ],
+      "paths": [
+        "./content/*.html"
+      ]
+    },
+    "options": {
+      "safelist": [
+        "html",
+        "body",
+        "head"
+      ],
+      "ignore": [
+        ".debug-*"
+      ],
+      "blocklist": [
+        ".deprecated-*"
+      ]
+    }
+  }
+}

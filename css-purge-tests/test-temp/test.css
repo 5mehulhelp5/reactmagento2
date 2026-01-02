@@ -1,0 +1,33 @@
+
+    /* Base styles */
+    .header { background: white; padding: 20px; }
+    .footer { background: black; color: white; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    /* Components */
+    .button { padding: 10px 20px; background: blue; }
+    .button-primary { background: green; }
+    .button-secondary { background: gray; }
+    
+    /* Utilities - should be ignored */
+    .debug-info { display: none; }
+    .test-mode { border: 1px solid red; }
+    
+    /* Deprecated - should be blocked */
+    .deprecated-old { color: orange; }
+    .legacy-style { font-size: 14px; }
+    
+    /* Safelist - should be preserved */
+    .safelist-class { color: purple; }
+    .always-keep { display: block; }
+    
+    /* Unused classes - should be purged */
+    .unused-class { color: yellow; }
+    .never-used { display: none; }
+    
+    /* Media queries */
+    @media (min-width: 768px) {
+      .header { padding: 30px; }
+      .container { max-width: 1400px; }
+    }
+  
