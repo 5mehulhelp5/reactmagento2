@@ -2,6 +2,9 @@
 
 use Pest\TestSuite;
 
+// Load shared mock classes
+require_once __DIR__ . '/Unit/Mocks.php';
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

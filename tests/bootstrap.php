@@ -193,3 +193,6 @@ if (class_exists('Magento\Framework\App\ObjectManager')) {
         echo "WARNING: Could not set mock ObjectManager: " . $e->getMessage() . "\n";
     }
 }
+
+// Load shared mock classes
+require_once __DIR__ . '/Unit/Mocks.php';

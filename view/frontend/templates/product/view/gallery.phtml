@@ -44,7 +44,18 @@ $imageWidth = $block->getImageAttribute('product_page_image_medium', 'width');
 $imageHeight = $block->getImageAttribute('product_page_image_medium', 'height');
 $mobileImage = $helper->init($product, 'product_page_image_small')->resize(365, 260)->keepAspectRatio(true)->setQuality(90);
 $mobileImageUrl = $mobileImage->getUrl();
-$base64Image = true; //wins 0.1-0.2s to LCP
+
+// Use ObjectManager to get config directly (without custom block)
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$scopeConfig = $objectManager->get(\Magento\Framework\App\Config\ScopeConfigInterface::class);
+$base64Image = $scopeConfig->isSetFlag(
+    'react_vue_config/product/base64_image',
+    \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+); //wins 0.1-0.2s to LCP
+
+// Store original URL for preloading (before base64 conversion)
+$originalMobileImageUrl = $mobileImageUrl;
+
 if ($base64Image) {
     $mobileImagePath = BP . '/pub/' . parse_url($mobileImageUrl, PHP_URL_PATH);
     $mobileImageUrl = imageToBase64($mobileImagePath);
@@ -52,7 +63,10 @@ if ($base64Image) {
 
 $gallaryData = $block->getGalleryImagesJson();
 
-$images = json_decode($gallaryData, true);
+$imagesJson = !empty($gallaryData) ? json_decode($gallaryData, true) : [];
+if (!is_array($imagesJson)) {
+    $imagesJson = [];
+}
 
 ?>
 
@@ -61,23 +75,41 @@ $images = json_decode($gallaryData, true);
 
     <!-- Main Image Display -->
         <div class="m-img" id="m-img">
-            <?php foreach ($images as $n => $image): ?>
-                <?php if ($image['isMain']): ?>
-                    <!-- Responsive image -->
-                    <picture id="mob-pict">
-                        <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
-                        <source media="(max-width: 1024px)" srcset="<?=$image['img']?>">
-                        <img src="<?=$image['img'];?>" alt="<?=$image['caption'];?>" id="mImg" width="700px" src-full="<?=$image['img']?>" height="700px" fetchpriority="high">
-                    </picture>
-                <?php if (!$base64Image /*preload mobile hero images with headers*/ && !headers_sent()): header("Link: <".$mobileImageUrl.">; rel=preload; as=image; fetchpriority=high"); endif; ?>
-                <?php endif; ?>
-            <?php endforeach; ?>
+            <?php if (!empty($imagesJson)): ?>
+                <?php foreach ($imagesJson as $n => $image): ?>
+                    <?php if (isset($image['isMain']) && $image['isMain']): ?>
+                        <!-- Responsive image -->
+                        <picture id="mob-pict">
+                            <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
+                            <source media="(max-width: 1024px)" srcset="<?=isset($image['img']) ? $image['img'] : ''?>">
+                            <img src="<?=isset($image['img']) ? $image['img'] : '';?>" alt="<?=isset($image['caption']) ? $image['caption'] : '';?>" id="mImg" width="700px" src-full="<?=isset($image['img']) ? $image['img'] : ''?>" height="700px" fetchpriority="high">
+                        </picture>
+                        <?php if (!$base64Image): 
+                            // Use ImagePreload class directly
+                            $imagePreload = $objectManager->get(\React\React\Features\ImagePreload::class);
+                            $imagePreload->preloadImage($originalMobileImageUrl, $base64Image);
+                        endif; ?>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            <?php elseif (!empty($mainImage)): ?>
+                <!-- Fallback to main image if JSON not available -->
+                <picture id="mob-pict">
+                    <source media="(max-width: 600px)" srcset="<?=$mobileImageUrl?>">
+                    <source media="(max-width: 1024px)" srcset="<?=$mainImage->getData('medium_image_url')?>">
+                    <img src="<?=$mainImage->getData('medium_image_url');?>" alt="<?=$mainImage->getData('label');?>" id="mImg" width="700px" src-full="<?=$mainImage->getData('large_image_url')?>" height="700px" fetchpriority="high">
+                </picture>
+                <?php if (!$base64Image): 
+                    // Use ImagePreload class directly
+                    $imagePreload = $objectManager->get(\React\React\Features\ImagePreload::class);
+                    $imagePreload->preloadImage($originalMobileImageUrl, $base64Image);
+                endif; ?>
+            <?php endif; ?>
         </div>
 
     <!-- Thumbnail Navigation -->
     <div class="thmb">
         <?php if (count($images) > 1): foreach ($images as $image): ?>
-			            <img src="<?=$image['thumb'];?>" src-full="<?=$image['img']?>" loading="lazy" fetchpriority="low" alt="<?=$image['caption'];?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image['img'];?>';document.getElementById('mImg').setAttribute('src-full','<?=$image['full'];?>');">
+			            <img src="<?=$image->getData('small_image_url');?>" src-full="<?=$image->getData('large_image_url');?>" loading="lazy" fetchpriority="low" alt="<?=$image->getData('label');?>" class="thumb" onclick="document.querySelectorAll('#mob-pict source').forEach(source => source.remove());document.getElementById('mImg').src='<?=$image->getData('large_image_url');?>';document.getElementById('mImg').setAttribute('src-full','<?=$image->getData('large_image_url');?>');">
 			        <?php endforeach;endif; ?>
         <?php if (count($images) <= 1) {echo "<style>@media (max-width: 768px) {.gallery {min-height: 255px !important;}</style>";}?>
     </div>

@@ -20,6 +20,9 @@
 				<critical>1</critical>
 				<defer_css>1</defer_css>
 			</css>
+			<product>
+            	<base64_image>1</base64_image>
+			</product>
 		</react_vue_config>
 	</default>
 </config>

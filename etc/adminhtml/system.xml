@@ -65,6 +65,14 @@
 					<config_path>react_vue_config/css/defer_css</config_path>
 				</field>
 			</group>
+			<group id="product" sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+				<label>Product configuration</label>
+				<field id="base64_image" type="select"  sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Enable Base64 Image Encoding</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+					<comment>Convert mobile product images to base64 format. Can improve LCP by 0.1-0.2s but increases HTML size.</comment>
+				</field>
+			</group>
 		</section>
 	</system>
 </config>

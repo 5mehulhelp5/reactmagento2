@@ -36,6 +36,86 @@ php bin/magento config:set dev/js/move_script_to_bottom 1
 
 ![React + Magento 2](https://github.com/Genaker/reactmagento2/blob/master/KnockoutMagento2React.png)
 
+## JavaScript Optimization Configuration
+
+To optimize JavaScript performance with existing Magento JS no JS changes needed!!, configure the following settings:
+
+**Important:** This module uses native Magento JavaScript methods and APIs. No custom JavaScript modifications are required - all optimizations work with Magento's existing JavaScript implementation out of the box. The module leverages Magento's built-in JavaScript functionality (`requirejs`, `mage/requirejs/mixins.js`, `requirejs-config.js`, etc.) without replacing or modifying core Magento JS files. The module leverages Magento's built-in JavaScript functionality (`requirejs`, `mage/requirejs/mixins.js`, `requirejs-config.js`, etc.) without replacing or modifying core Magento JS files.
+
+### 1. Move JS to Bottom (Defer JS)
+Enable the module's "Defer JS" feature to move JavaScript files to the bottom of the page for better performance. Scripts with `no-defer` attribute are preserved in their original position.
+
+**Via Admin Panel:**
+- Go to: Stores > Configuration > React-Luma integration > Configuration > Magento JS configuration
+- Set "Defer JS (Move Scripts to Bottom)" to "Yes"
+- Save config and clear cache
+
+**Via CLI:**
+```bash
+php bin/magento config:set react_vue_config/junk/defer_js 1
+php bin/magento cache:clean
+```
+
+**Via GET Parameter (for testing):**
+- Add `?defer-js=true` to any URL to enable temporarily
+- Add `?defer-js=false` to disable temporarily
+
+### 2. Disable JavaScript Bundling (!Important)
+**Important:** Disable Magento's JavaScript bundling to prevent conflicts and ensure proper script loading order.
+
+**Why disable bundling?**
+Magento's JavaScript bundling or any other MAgento bundlings creates large combined JavaScript files that block page rendering and increase blocking time. When bundling is enabled:
+- Multiple JavaScript files are combined into large bundles that must be downloaded and parsed before the page can become interactive
+- This increases **Total Blocking Time (TBT)** and delays **Time to Interactive (TTI)**
+- Large bundles prevent parallel script loading and caching optimization
+- Scripts that could load asynchronously are forced to load synchronously in the bundle
+- Individual script updates require re-downloading the entire bundle
+
+By disabling bundling:
+- Scripts can load in parallel, reducing blocking time
+- Individual scripts can be cached independently
+- Smaller files load faster and parse quicker
+- Better browser caching - only changed scripts need to be re-downloaded
+- Improved performance metrics (LCP, FCP, TBT, TTI)
+
+**Note:** Never use Magento JavaScript bundling - it doesn't have a positive influence on Core Web Vitals and actually degrades performance metrics.
+
+**Via CLI:**
+```bash
+php bin/magento config:set dev/js/enable_js_bundling 0
+php bin/magento cache:clean
+```
+
+**Via Admin Panel:**
+- Go to: Stores > Configuration > Advanced > Developer > JavaScript Settings
+- Set "Enable JavaScript Bundling" to "No"
+- Save config and clear cache
+
+### 3. Enable JavaScript Minification
+Enable JavaScript minification to reduce file sizes and improve page load times.
+
+**Via CLI:**
+```bash
+php bin/magento config:set dev/js/minify_files 1
+php bin/magento cache:clean
+```
+
+**Via Admin Panel:**
+- Go to: Stores > Configuration > Advanced > Developer > JavaScript Settings
+- Set "Minify JavaScript Files" to "Yes"
+- Save config and clear cache
+
+**Note:** In production mode, the Developer section may be hidden in the Admin Panel. Use CLI commands instead.
+
+### Complete JavaScript Optimization Setup
+Run all three commands together for optimal JavaScript performance:
+```bash
+php bin/magento config:set react_vue_config/junk/defer_js 1
+php bin/magento config:set dev/js/enable_js_bundling 0
+php bin/magento config:set dev/js/minify_files 1
+php bin/magento cache:clean
+```
+
 # Updates:
 - VueJS implementation 
 - Magento Configuration enable React, VueJS

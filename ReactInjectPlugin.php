@@ -48,11 +48,11 @@ class ReactInjectPlugin extends Renderer
      * @param \Magento\Framework\Escaper $escaper
      * @param \Magento\Framework\Stdlib\StringUtils $string
      * @param \Psr\Log\LoggerInterface $logger
-     * @param MsApplicationTileImage|null $msApplicationTileImage
      * @param ScopeConfigInterface $config
      * @param State $state
      * @param StoreManagerInterface $store
      * @param Template $template
+     * @param MsApplicationTileImage|null $msApplicationTileImage
      */
     public function __construct(
         Config $pageConfig,
@@ -61,11 +61,11 @@ class ReactInjectPlugin extends Renderer
         \Magento\Framework\Escaper $escaper,
         \Magento\Framework\Stdlib\StringUtils $string,
         \Psr\Log\LoggerInterface $logger,
-        MsApplicationTileImage $msApplicationTileImage = null,
         private ScopeConfigInterface $config,
         private State $state,
         private StoreManagerInterface $store,
-        private Template $template
+        private Template $template,
+        ?MsApplicationTileImage $msApplicationTileImage = null
     ) {
         parent::__construct($pageConfig, $assetMergeService, $urlBuilder, $escaper, $string, $logger, $msApplicationTileImage);
         $this->configuration = $this->getConfigurationSettings();

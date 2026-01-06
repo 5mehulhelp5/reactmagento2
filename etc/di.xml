@@ -4,7 +4,6 @@
     <preference for="Magento\Framework\View\Page\Config\Renderer" type="React\React\ReactInjectPlugin"/>
     <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="React\React\Block\Product\Renderer\Configurable"/>
     <preference for="Magento\Catalog\Block\Product\ImageFactory" type="React\React\Block\Product\ImageFactory"/>
-
     <preference for="Magento\Checkout\CustomerData\Cart" type="React\React\CustomerData\Cart" />
 
     <type name="Magento\Framework\App\Response\HttpInterface">

@@ -2,18 +2,129 @@
 
 This directory contains **PHP tests** (using Pest) for the React-Luma Magento 2 module. The module also includes **JavaScript tests** for `css-purge.js` located in `../css-purge-tests/`.
 
+## Architecture
+
+This test suite uses a **hybrid bootstrap architecture** that combines Pest PHP testing framework with Magento's class autoloader. The architecture allows testing Magento modules without requiring a full Magento installation.
+
+### Key Components
+
+1. **`bootstrap.php`** - Hybrid bootstrap that:
+   - Loads Pest dependencies (PHPUnit 10+)
+   - Registers Magento class autoloader (excluding PHPUnit classes)
+   - Sets up a mock ObjectManager for dependency injection
+   - Enables "PEST mode" where `die()` calls return values instead of exiting
+
+2. **Test Structure**:
+   - Tests are located in `Unit/` directory
+   - Each test file follows Pest syntax
+   - Mock classes are defined inline or in test helper classes
+   - Reflection API is used to inject mocks into protected/private properties
+
+3. **Mock Strategy**:
+   - Anonymous classes extend Magento classes (skip constructors to avoid dependencies)
+   - Custom mock classes implement Magento interfaces (e.g., `ScopeConfigInterface`)
+   - Reflection is used to inject mocks into `_scopeConfig` and other protected properties
+
 ## Quick Start
 
-### Run PHP Tests Only
+### Run All PHP Tests
 ```bash
 cd /var/www/html/react-luma/vendor/genaker/react-luma/tests
-vendor/bin/pest
+php vendor/bin/pest
 ```
 
-### Run JavaScript Tests Only
+### Run Specific Test File
+```bash
+cd /var/www/html/react-luma/vendor/genaker/react-luma/tests
+php vendor/bin/pest Unit/Gallery.test.php
+```
+
+### Run JavaScript Tests
 ```bash
 cd /var/www/html/react-luma/vendor/genaker/react-luma/css-purge-tests
 npm test
+```
+
+## Running Tests
+
+### Prerequisites
+
+1. **Install PHP dependencies**:
+   ```bash
+   cd /var/www/html/react-luma/vendor/genaker/react-luma/tests
+   composer install
+   ```
+
+2. **Install JavaScript dependencies** (for JS tests):
+   ```bash
+   cd /var/www/html/react-luma/vendor/genaker/react-luma/css-purge-tests
+   npm install
+   ```
+
+### PHP Test Examples
+
+**Run all tests:**
+```bash
+php vendor/bin/pest
+```
+
+**Run specific test file:**
+```bash
+php vendor/bin/pest Unit/Gallery.test.php
+php vendor/bin/pest Unit/DeferJS.test.php
+php vendor/bin/pest Unit/DeferCSS.test.php
+```
+
+**Run with coverage:**
+```bash
+php vendor/bin/pest --coverage
+```
+
+**Run with verbose output:**
+```bash
+php vendor/bin/pest -v
+```
+
+### Test File Structure
+
+Each test file follows this pattern:
+
+```php
+<?php
+// Mock classes (defined before test helper)
+class MockScopeConfig implements \Magento\Framework\App\Config\ScopeConfigInterface { ... }
+
+// Test helper class (uses reflection to inject mocks)
+class GalleryTestHelper { ... }
+
+// Test cases using Pest syntax
+beforeEach(function () { ... });
+
+test('test description', function () { ... });
+```
+
+### Writing Tests
+
+1. **Create mock classes** that implement Magento interfaces or extend Magento classes
+2. **Use reflection** to inject mocks into protected properties (e.g., `_scopeConfig`)
+3. **Test public methods** directly or use reflection for private methods
+4. **Use Pest assertions** (`expect()`, `toBe()`, `toBeTrue()`, etc.)
+
+### Example: Testing Configuration
+
+```php
+test('isBase64ImageEnabled returns true when config is enabled', function () {
+    $mockScopeConfig = new MockScopeConfig([
+        'react_vue_config/product/base64_image' => '1'
+    ]);
+    $helper = new GalleryTestHelper([
+        'scopeConfig' => $mockScopeConfig
+    ]);
+    
+    $result = $helper->callMethod('isBase64ImageEnabled');
+    
+    expect($result)->toBeTrue();
+});
 ```
 
 ---
@@ -110,21 +221,23 @@ vendor/genaker/react-luma/
 cd /var/www/html/react-luma/vendor/genaker/react-luma/tests
 
 # Run all PHP tests
-vendor/bin/pest
+php vendor/bin/pest
 
 # Run specific test file
-vendor/bin/pest Unit/DeferJS.test.php
-vendor/bin/pest Unit/ReactInjectPlugin.test.php
+php vendor/bin/pest Unit/DeferJS.test.php
+php vendor/bin/pest Unit/DeferCSS.test.php
+php vendor/bin/pest Unit/Gallery.test.php
+php vendor/bin/pest Unit/ReactInjectPlugin.test.php
 
 # Run with filter
-vendor/bin/pest --filter="deferStylesL"
-vendor/bin/pest --filter="Action Filter"
+php vendor/bin/pest --filter="isBase64ImageEnabled"
+php vendor/bin/pest --filter="Action Filter"
 
 # Run without coverage (faster)
-vendor/bin/pest --no-coverage
+php vendor/bin/pest --no-coverage
 
 # Run with coverage
-vendor/bin/pest --coverage
+php vendor/bin/pest --coverage
 ```
 
 ### From Module Root
@@ -133,10 +246,10 @@ vendor/bin/pest --coverage
 cd /var/www/html/react-luma/vendor/genaker/react-luma
 
 # Run all tests
-tests/vendor/bin/pest
+php tests/vendor/bin/pest
 
 # Run specific test file
-tests/vendor/bin/pest Unit/DeferJS.test.php
+php tests/vendor/bin/pest Unit/DeferJS.test.php
 ```
 
 ## Running JavaScript Tests
@@ -339,9 +452,11 @@ npm run test:watch
 - **Framework**: Pest PHP (v2.36.0) with PHPUnit 10+
 - **Location**: `tests/`
 - **Test Files**: 
-  - `Unit/DeferJS.test.php` (19 tests)
+  - `Unit/DeferJS.test.php` (19+ tests)
+  - `Unit/DeferCSS.test.php` (11 tests)
+  - `Unit/Gallery.test.php` (10 tests)
   - `Unit/ReactInjectPlugin.test.php` (37+ tests)
-- **Total**: 56+ tests passing
+- **Total**: 77+ tests passing
 
 ### JavaScript Tests
 - **Framework**: Jest (v29.7.0)
