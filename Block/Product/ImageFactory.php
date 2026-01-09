@@ -137,7 +137,7 @@ class ImageFactory extends Legacy
      * @param array|null $attributes
      * @return ImageBlock
      */
-    public function create(Product $product, string $imageId, array $attributes = null): ImageBlock
+    public function create(Product $product, string $imageId, ?array $attributes = null): ImageBlock
     {
         $viewImageConfig = $this->presentationConfig->getViewConfig()->getMediaAttributes(
             'Magento_Catalog',

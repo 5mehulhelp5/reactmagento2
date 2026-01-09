@@ -26,7 +26,7 @@ class Gallery extends MagentoGallery
         \Magento\Framework\Json\EncoderInterface $jsonEncoder,
         ImagePreload $imagePreload,
         array $data = [],
-        \Magento\Catalog\Model\Product\Image\UrlBuilder $urlBuilder = null
+        ?\Magento\Catalog\Model\Product\Image\UrlBuilder $urlBuilder = null
     ) {
         $this->imagePreload = $imagePreload;
         parent::__construct($context, $arrayUtils, $jsonEncoder, $data, null, [], $urlBuilder);
@@ -34,7 +34,7 @@ class Gallery extends MagentoGallery
 
     /**
      * Preload mobile hero image using HTTP Link header
-     * 
+     *
      * @param string $imageUrl The URL of the image to preload
      * @param bool $isBase64 Whether the image is base64 encoded
      * @return void
@@ -49,7 +49,7 @@ class Gallery extends MagentoGallery
 
     /**
      * Check if base64 image encoding is enabled
-     * 
+     *
      * @return bool
      */
     public function isBase64ImageEnabled()
